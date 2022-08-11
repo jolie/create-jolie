@@ -1,5 +1,4 @@
 const Generator = require('yeoman-generator')
-const jpmInit = require('./jpm')
 const debug = require('debug')('jolie-create')
 
 module.exports = class extends Generator {
@@ -10,17 +9,37 @@ module.exports = class extends Generator {
 
     this.argument('packagename', { type: String, required: false })
     debug('options: ', this.options)
-    this.composeWith(require.resolve('generator-npm-init/app'), { name: this.options.packagename })
-    this.composeWith({ Generator: jpmInit, path: require.resolve('./jpm') }
-      , { name: this.options.packagename })
   }
 
   initializing () {
     this.log('Start creating a Jolie project.')
   }
 
-  prompting () {
-
+  async prompting () {
+    this.answers = await this.prompt([
+      {
+        type: 'input',
+        name: 'name',
+        message: 'package name'
+      },
+      {
+        type: 'input',
+        name: 'version'
+      },
+      { type: 'input', name: 'description' },
+      { type: 'input', name: 'main', message: 'entry point' },
+      { type: 'input', name: 'test', message: 'test command' },
+      { type: 'input', name: 'repo', message: 'git repository' },
+      { type: 'input', name: 'keywords', message: 'keywords (space-delimited)' },
+      { type: 'input', name: 'author' },
+      { type: 'input', name: 'license' },
+      {
+        type: 'confirm',
+        name: 'java',
+        message: 'Will you write JavaService as part of this project?'
+      }
+    ])
+    debug(this.answers)
   }
 
   configuring () {
@@ -28,6 +47,28 @@ module.exports = class extends Generator {
   }
 
   writing () {
+    this.composeWith(require.resolve('generator-npm-init/app'), {
+      'skip-name': true,
+      'skip-description': true,
+      'skip-version': true,
+      'skip-main': true,
+      'skip-repo': true,
+      'skip-keywords': true,
+      'skip-author': true,
+      'skip-license': true,
+      name: this.answers.name,
+      description: this.answers.description,
+      version: this.answers.version,
+      main: this.answers.main,
+      repo: this.answers.repo,
+      keywords: this.answers.keywords,
+      author: this.answers.author,
+      license: this.answers.license
+    })
+  }
+
+  install () {
+    this.spawnCommand('npx', ['@jolie/jpm', 'init'])
   }
 
   end () {

@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const yeoman = require('yeoman-environment')
 const env = yeoman.createEnv()
 

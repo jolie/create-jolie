@@ -4,7 +4,7 @@
   "description": "",
   "main": "main.js",
   "bin": {
-    "create-jolie": "node main.js"
+    "create-jolie": "main.js"
   },
   "directories": {
     "doc": "doc"

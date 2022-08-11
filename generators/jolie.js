@@ -1,6 +1,6 @@
 const Generator = require('yeoman-generator')
+const jpmInit = require('./jpm')
 const debug = require('debug')('jolie-create')
-const shell = require('shelljs')
 
 module.exports = class extends Generator {
   // The name `constructor` is important here
@@ -8,9 +8,11 @@ module.exports = class extends Generator {
     // Calling the super constructor is important so our generator is correctly set up
     super(args, opts)
 
-    this.argument('packagename', { type: String, required: true })
+    this.argument('packagename', { type: String, required: false })
     debug('options: ', this.options)
     this.composeWith(require.resolve('generator-npm-init/app'), { name: this.options.packagename })
+    this.composeWith({ Generator: jpmInit, path: require.resolve('./jpm') }
+      , { name: this.options.packagename })
   }
 
   initializing () {
@@ -26,7 +28,6 @@ module.exports = class extends Generator {
   }
 
   writing () {
-    shell.exec('npx @jolie/jpm init')
   }
 
   end () {

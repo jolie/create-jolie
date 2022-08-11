@@ -3,7 +3,9 @@
   "version": "1.0.1",
   "description": "",
   "main": "main.js",
-  "bin": "node main.js",
+  "bin": {
+    "create-jolie": "node main.js"
+  },
   "directories": {
     "doc": "doc"
   },

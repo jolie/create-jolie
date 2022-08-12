@@ -36,7 +36,7 @@ module.exports = class extends Generator {
       {
         type: 'confirm',
         name: 'java',
-        message: 'Will you write JavaService as part of this project?'
+        message: 'Will you write Java services as part of this project?'
       }
     ])
     debug(this.answers)
@@ -72,6 +72,6 @@ module.exports = class extends Generator {
   }
 
   end () {
-    this.log('A Jolie project is initialized.')
+    this.log('A Jolie project is initialised.')
   }
 }

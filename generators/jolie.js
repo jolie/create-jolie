@@ -4,6 +4,36 @@ const semver = require('semver')
 const os = require('os')
 const debug = require('debug')('jolie-create')
 
+const Templates = {
+	EMPTY: {
+		value: 'Empty Jolie project',
+		prompts: [
+			{ type: 'input', name: 'mainServiceName', message: 'Name of main service', default: 'Main' }
+		],
+		scaffold: async gen => {
+			console.log(gen.templateAnswers.mainServiceName)
+			gen.renderTemplate(
+				'empty/main.ol',
+				'main.ol',
+				{ Main: gen.templateAnswers.mainServiceName }
+			)
+		}
+	},
+	SCRIPT: {
+		value: 'Jolie script',
+		prompts: [
+			{ type: 'input', name: 'mainServiceName', message: 'Name of main service', default: 'Main' }
+		],
+		scaffold: async gen => {
+			gen.renderTemplate(
+				'script/main.ol',
+				'main.ol',
+				{ Main: gen.templateAnswers.mainServiceName }
+			)
+		}
+	}
+}
+
 module.exports = class extends Generator {
 	// The name `constructor` is important here
 	constructor (args, opts) {
@@ -47,16 +77,34 @@ module.exports = class extends Generator {
 				name: 'watch',
 				message: 'Do you want to a "watch" script for live development (hot reload)?',
 				default: true
+			},
+			{
+				type: 'list',
+				name: 'template',
+				message: 'What project template do you want to start from?',
+				choices: [
+					Templates.EMPTY.value,
+					Templates.SCRIPT.value
+				],
+				default: 0
 			}
 		])
 		debug(this.answers)
+
+		for (const templateName in Templates) {
+			const template = Templates[templateName]
+			if (template.value == this.answers.template) {
+				this.templateAnswers = await this.prompt(template.prompts)
+				break
+			}
+		}
 	}
 
 	configuring () {
 
 	}
 
-	writing () {
+	async writing () {
 		this.composeWith(require.resolve('generator-npm-init/app'), {
 			'skip-name': true,
 			'skip-description': true,
@@ -82,6 +130,14 @@ module.exports = class extends Generator {
 				}
 				: null
 		})
+
+		for (const templateName in Templates) {
+			const template = Templates[templateName]
+			if (template.value == this.answers.template) {
+				template.scaffold(this)
+				break
+			}
+		}
 	}
 
 	install () {

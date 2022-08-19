@@ -19,6 +19,16 @@
   "bugs": {
     "url": "https://github.com/jolie/create-jolie/issues"
   },
+  "contributors": [
+    {
+      "name": "Narongrit Unwerawattana"
+    },
+    {
+      "name": "Fabrizio Montesi",
+      "email": "famontesi@gmail.com",
+      "url": "https://www.fabriziomontesi.com/"
+    }
+  ],
   "homepage": "https://github.com/jolie/create-jolie#readme",
   "dependencies": {
     "debug": "^4.3.4",
@@ -33,6 +43,14 @@
     "eslint-config-standard": "^17.0.0",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-n": "^15.2.4",
-    "eslint-plugin-promise": "^6.0.0"
+    "eslint-plugin-promise": "^6.0.0",
+    "nodemon": "^2.0.19"
+  },
+  "jolie": {
+    "dependencies": {},
+    "maven": {
+      "dependencies": {},
+      "indirectDependencies": {}
+    }
   }
 }

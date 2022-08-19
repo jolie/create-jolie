@@ -29,7 +29,7 @@ module.exports = class extends Generator {
 			{
 				type: 'input',
 				name: 'version',
-				default: '0.0.0',
+				default: '0.1.0',
 				validate (ip) {
 					console.log(ip)
 					return semver.valid(ip) !== null

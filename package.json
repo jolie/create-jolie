@@ -1,7 +1,7 @@
 {
   "name": "create-jolie",
   "version": "1.0.7",
-  "description": "Set up Jolie project easy way",
+  "description": "Set up a Jolie project in the easy way",
   "main": "main.js",
   "bin": {
     "create-jolie": "main.js"
@@ -15,7 +15,7 @@
     "url": "git+https://github.com/jolie/create-jolie.git"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/jolie/create-jolie/issues"
   },

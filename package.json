@@ -1,6 +1,6 @@
 {
   "name": "create-jolie",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Set up Jolie project easy way",
   "main": "main.js",
   "bin": {

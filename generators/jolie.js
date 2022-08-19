@@ -78,8 +78,8 @@ module.exports = class extends Generator {
 			test: this.answers.test,
 			scripts: this.answers.watch
 				? {
-						watch: `nodemon jolie ${this.answers.main}`
-					}
+					watch: `nodemon jolie ${this.answers.main}`
+				}
 				: null
 		})
 	}

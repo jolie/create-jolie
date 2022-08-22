@@ -34,7 +34,6 @@
   "homepage": "https://github.com/jolie/create-jolie#readme",
   "dependencies": {
     "debug": "^4.3.4",
-    "generator-npm-init": "^1.5.1",
     "semver": "^7.3.7",
     "shelljs": "^0.8.5",
     "yeoman-environment": "^3.10.0",

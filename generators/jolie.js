@@ -151,16 +151,8 @@ module.exports = class extends Generator {
 	install () {
 		this.spawnCommandSync('npx', ['@jolie/jpm', 'init'])
 
-		if (this.answers.watch) {
-			this.spawnCommandSync('npm', ['install', '-D', 'nodemon'])
-		}
-
-		for (const templateName in Templates) {
-			const template = Templates[templateName]
-			if (template.value == this.answers.template) {
-				template.install(this)
-				break
-			}
+		if (this.answers.template.install) {
+			this.answers.template.install(this)
 		}
 	}
 

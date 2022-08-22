@@ -8,8 +8,7 @@
   },
   "scripts": {
     "start": "node main.js",
-    "debug": "mkdir test && cd test && DEBUG=jolie-create* ../main.js ; cd ..",
-    "clean-debug": "rm -rf test",
+    "debug": "rm -rf .dbg; mkdir .dbg && cd .dbg && DEBUG=jolie-create* ../main.js ; cd ..",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

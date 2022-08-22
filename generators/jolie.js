@@ -30,6 +30,41 @@ const Templates = {
 				{ Main: gen.templateAnswers.mainServiceName }
 			)
 		}
+	},
+	WEB_APP: {
+		value: 'Web application (simple)',
+		prompts: [
+			{ type: 'input', name: 'tcpPort', message: 'TCP port for receiving HTTP requests', default: '8080' }
+		],
+		scaffold: async gen => {
+			gen.renderTemplate(
+				'webapp/main.ol',
+				'main.ol',
+				{ tcpPort: gen.templateAnswers.tcpPort }
+			)
+			gen.copyTemplate('webapp/web', 'web')
+		},
+		install: gen => {
+			gen.spawnCommandSync('npx', ['@jolie/jpm', 'install', '@jolie/leonardo'])
+		}
+	},
+	WEB_APP_MUSTACHE: {
+		value: 'Web application (with Mustache templating)',
+		prompts: [
+			{ type: 'input', name: 'tcpPort', message: 'TCP port for receiving HTTP requests', default: '8080' }
+		],
+		scaffold: async gen => {
+			gen.renderTemplate(
+				'webapp-mustache/main.ol',
+				'main.ol',
+				{ tcpPort: gen.templateAnswers.tcpPort }
+			)
+			gen.copyTemplate('webapp-mustache/web', 'web')
+			gen.copyTemplate('webapp-mustache/templates', 'templates')
+		},
+		install: gen => {
+			gen.spawnCommandSync('npx', ['@jolie/jpm', 'install', '@jolie/leonardo'])
+		}
 	}
 }
 
@@ -115,9 +150,21 @@ module.exports = class extends Generator {
 
 	install () {
 		this.spawnCommandSync('npx', ['@jolie/jpm', 'init'])
+
+		if (this.answers.watch) {
+			this.spawnCommandSync('npm', ['install', '-D', 'nodemon'])
+		}
+
+		for (const templateName in Templates) {
+			const template = Templates[templateName]
+			if (template.value == this.answers.template) {
+				template.install(this)
+				break
+			}
+		}
 	}
 
 	end () {
-		this.log('A Jolie project is initialized.')
+		this.log('Jolie project initialised')
 	}
 }

@@ -11,7 +11,6 @@ const Templates = {
 			{ type: 'input', name: 'mainServiceName', message: 'Name of main service', default: 'Main' }
 		],
 		scaffold: async gen => {
-			console.log(gen.templateAnswers.mainServiceName)
 			gen.renderTemplate(
 				'empty/main.ol',
 				'main.ol',
@@ -69,7 +68,7 @@ module.exports = class extends Generator {
 			{ type: 'input', name: 'main', message: 'entry point', default: 'main.ol' },
 			{ type: 'input', name: 'test', message: 'test command', default: 'echo "Error: no test specified" && exit 1' },
 			{ type: 'input', name: 'repo', message: 'git repository' },
-			{ type: 'input', name: 'keywords', message: 'keywords (space-delimited)' },
+			{ type: 'input', name: 'keywords', message: 'keywords (space-delimited)', default: '' },
 			{ type: 'input', name: 'author', default: os.userInfo().username },
 			{ type: 'input', name: 'license', default: 'ISC' },
 			{
@@ -82,72 +81,43 @@ module.exports = class extends Generator {
 				type: 'list',
 				name: 'template',
 				message: 'What project template do you want to start from?',
-				choices: [
-					Templates.EMPTY.value,
-					Templates.SCRIPT.value
-				],
-				default: 0
+				choices: Object.entries(Templates).map(([_, template]) => {
+					return { name: template.value, value: template }
+				})
 			}
 		])
-		debug(this.answers)
-
-		for (const templateName in Templates) {
-			const template = Templates[templateName]
-			if (template.value == this.answers.template) {
-				this.templateAnswers = await this.prompt(template.prompts)
-				break
-			}
-		}
+		debug('answers', this.answers)
+		this.templateAnswers = await this.prompt(this.answers.template.prompts)
+		debug('templateAnswers', this.templateAnswers)
 	}
 
 	configuring () {
+		const { template, templateAnswers, watch, ...answersWithoutTemplate } = this.answers
+		answersWithoutTemplate.keywords = answersWithoutTemplate.keywords === '' ? [] : answersWithoutTemplate.keywords.split(',')
 
+		if (watch) {
+			answersWithoutTemplate.script = {
+				watch: `nodemon jolie ${answersWithoutTemplate.main}`
+			}
+			answersWithoutTemplate.devDependencies = {
+				nodemon: '^2.0.19'
+			}
+		}
+		this.answersWithoutTemplate = answersWithoutTemplate
 	}
 
 	async writing () {
-		this.composeWith(require.resolve('generator-npm-init/app'), {
-			'skip-name': true,
-			'skip-description': true,
-			'skip-version': true,
-			'skip-main': true,
-			'skip-repo': true,
-			'skip-keywords': true,
-			'skip-author': true,
-			'skip-license': true,
-			'skip-test': true,
-			name: this.answers.name,
-			description: this.answers.description,
-			version: this.answers.version,
-			main: this.answers.main,
-			repo: this.answers.repo,
-			keywords: this.answers.keywords ? this.answers.keywords : [],
-			author: this.answers.author,
-			license: this.answers.license,
-			test: this.answers.test,
-			scripts: this.answers.watch
-				? {
-					watch: `nodemon jolie ${this.answers.main}`
-				}
-				: null
-		})
+		debug('writing package.json', this.answersWithoutTemplate)
 
-		for (const templateName in Templates) {
-			const template = Templates[templateName]
-			if (template.value == this.answers.template) {
-				template.scaffold(this)
-				break
-			}
-		}
+		this.fs.writeJSON(this.destinationPath('package.json'), this.answersWithoutTemplate)
+		this.answers.template.scaffold(this)
 	}
 
 	install () {
 		this.spawnCommandSync('npx', ['@jolie/jpm', 'init'])
-		if (this.answers.watch) {
-			this.spawnCommandSync('npm', ['install', '-D', 'nodemon'])
-		}
 	}
 
 	end () {
-		this.log('A Jolie project is initialised.')
+		this.log('A Jolie project is initialized.')
 	}
 }

@@ -8,6 +8,8 @@
   },
   "scripts": {
     "start": "node main.js",
+    "debug": "mkdir test && cd test && DEBUG=jolie-create* ../main.js ; cd ..",
+    "clean-debug": "rm -rf test",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -43,14 +45,6 @@
     "eslint-config-standard": "^17.0.0",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-n": "^15.2.4",
-    "eslint-plugin-promise": "^6.0.0",
-    "nodemon": "^2.0.19"
-  },
-  "jolie": {
-    "dependencies": {},
-    "maven": {
-      "dependencies": {},
-      "indirectDependencies": {}
-    }
+    "eslint-plugin-promise": "^6.0.0"
   }
 }

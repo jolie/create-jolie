@@ -103,7 +103,7 @@ module.exports = class extends Generator {
 			{ type: 'input', name: 'main', message: 'entry point', default: 'main.ol' },
 			{ type: 'input', name: 'test', message: 'test command', default: 'echo "Error: no test specified" && exit 1' },
 			{ type: 'input', name: 'repo', message: 'git repository' },
-			{ type: 'input', name: 'keywords', message: 'keywords (space-delimited)', default: '' },
+			{ type: 'input', name: 'keywords', message: 'keywords (comma-delimited)', default: '' },
 			{ type: 'input', name: 'author', default: os.userInfo().username },
 			{ type: 'input', name: 'license', default: 'ISC' },
 			{
@@ -131,7 +131,7 @@ module.exports = class extends Generator {
 		answersWithoutTemplate.keywords = answersWithoutTemplate.keywords === '' ? [] : answersWithoutTemplate.keywords.split(',')
 
 		if (watch) {
-			answersWithoutTemplate.script = {
+			answersWithoutTemplate.scripts = {
 				watch: `nodemon jolie ${answersWithoutTemplate.main}`
 			}
 			answersWithoutTemplate.devDependencies = {

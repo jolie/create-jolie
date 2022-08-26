@@ -10,7 +10,7 @@ const Templates = {
 		prompts: [
 			{ type: 'input', name: 'mainServiceName', message: 'Name of main service', default: 'Main' }
 		],
-		scaffold: async gen => {
+		scaffold: gen => {
 			gen.renderTemplate(
 				'empty/main.ol',
 				'main.ol',
@@ -23,7 +23,7 @@ const Templates = {
 		prompts: [
 			{ type: 'input', name: 'mainServiceName', message: 'Name of main service', default: 'Main' }
 		],
-		scaffold: async gen => {
+		scaffold: gen => {
 			gen.renderTemplate(
 				'script/main.ol',
 				'main.ol',
@@ -37,7 +37,7 @@ const Templates = {
 			{ type: 'confirm', name: 'webpack', message: 'Do you want to use webpack?' },
 			{ type: 'input', name: 'tcpPort', message: 'TCP port for receiving HTTP requests', default: '8080' }
 		],
-		scaffold: async gen => {
+		scaffold: gen => {
 			gen.renderTemplate(
 				'webapp/main.ol',
 				'main.ol',
@@ -54,12 +54,12 @@ const Templates = {
 		configure: gen => {
 			if (gen.templateAnswers.webpack) {
 				gen.packageJson.merge({
-					scripts: { "build": "webpack" }
+					scripts: { build: 'webpack' }
 				})
-				gen.addDevDependencies("webpack")
 			}
 		},
 		install: gen => {
+			gen.addDevDependencies('webpack')
 			gen.spawnCommandSync('npx', ['@jolie/jpm', 'install', '@jolie/leonardo'])
 		}
 	},
@@ -69,7 +69,7 @@ const Templates = {
 			{ type: 'confirm', name: 'webpack', message: 'Do you want to use webpack?' },
 			{ type: 'input', name: 'tcpPort', message: 'TCP port for receiving HTTP requests', default: '8080' }
 		],
-		scaffold: async gen => {
+		scaffold: gen => {
 			gen.renderTemplate(
 				'webapp-mustache/main.ol',
 				'main.ol',
@@ -87,12 +87,12 @@ const Templates = {
 		configure: gen => {
 			if (gen.templateAnswers.webpack) {
 				gen.packageJson.merge({
-					scripts: { "build": "webpack" }
+					scripts: { build: 'webpack' }
 				})
-				gen.addDevDependencies("webpack")
 			}
 		},
 		install: gen => {
+			gen.addDevDependencies('webpack')
 			gen.spawnCommandSync('npx', ['@jolie/jpm', 'install', '@jolie/leonardo'])
 		}
 	}
@@ -103,7 +103,7 @@ module.exports = class extends Generator {
 	constructor (args, opts) {
 		// Calling the super constructor is important so our generator is correctly set up
 		super(args, opts)
-
+		this.env.options.nodePackageManager = 'npm'
 		this.argument('packagename', { type: String, required: false })
 		debug('options: ', this.options)
 	}
@@ -166,7 +166,6 @@ module.exports = class extends Generator {
 			}
 			this.addDevDependencies({ nodemon: '^2.0.19' })
 		}
-		// this.answersWithoutTemplate = answersWithoutTemplate
 		this.packageJson.merge(answersWithoutTemplate)
 
 		if (this.answers.template.configure) {
@@ -175,21 +174,18 @@ module.exports = class extends Generator {
 	}
 
 	async writing () {
-		debug('writing package.json', this.answersWithoutTemplate)
-
-		// this.fs.writeJSON(this.destinationPath('package.json'), this.answersWithoutTemplate)
 		this.answers.template.scaffold(this)
 	}
 
 	install () {
+	}
+
+	end () {
 		this.spawnCommandSync('npx', ['@jolie/jpm', 'init'])
 
 		if (this.answers.template.install) {
 			this.answers.template.install(this)
 		}
-	}
-
-	end () {
 		this.log('Jolie project initialised')
 	}
 }

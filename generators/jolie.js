@@ -34,6 +34,7 @@ const Templates = {
 	WEB_APP: {
 		value: 'Web application (simple)',
 		prompts: [
+			{ type: 'confirm', name: 'webpack', message: 'Do you want to use webpack?' },
 			{ type: 'input', name: 'tcpPort', message: 'TCP port for receiving HTTP requests', default: '8080' }
 		],
 		scaffold: async gen => {
@@ -42,7 +43,21 @@ const Templates = {
 				'main.ol',
 				{ tcpPort: gen.templateAnswers.tcpPort }
 			)
-			gen.copyTemplate('webapp/web', 'web')
+			gen.copyTemplate('webapp/web', 'web', {
+				webpack: gen.templateAnswers.webpack,
+				tcpPort: gen.templateAnswers.tcpPort
+			})
+			if (gen.templateAnswers.webpack) {
+				gen.copyTemplate('webapp-webpack-addons', '.')
+			}
+		},
+		configure: gen => {
+			if (gen.templateAnswers.webpack) {
+				gen.packageJson.merge({
+					scripts: { "build": "webpack" }
+				})
+				gen.addDevDependencies("webpack")
+			}
 		},
 		install: gen => {
 			gen.spawnCommandSync('npx', ['@jolie/jpm', 'install', '@jolie/leonardo'])
@@ -51,6 +66,7 @@ const Templates = {
 	WEB_APP_MUSTACHE: {
 		value: 'Web application (with Mustache templating)',
 		prompts: [
+			{ type: 'confirm', name: 'webpack', message: 'Do you want to use webpack?' },
 			{ type: 'input', name: 'tcpPort', message: 'TCP port for receiving HTTP requests', default: '8080' }
 		],
 		scaffold: async gen => {
@@ -59,8 +75,22 @@ const Templates = {
 				'main.ol',
 				{ tcpPort: gen.templateAnswers.tcpPort }
 			)
-			gen.copyTemplate('webapp-mustache/web', 'web')
+			gen.renderTemplate('webapp-mustache/web', 'web', {
+				webpack: gen.templateAnswers.webpack,
+				tcpPort: gen.templateAnswers.tcpPort
+			})
 			gen.copyTemplate('webapp-mustache/templates', 'templates')
+			if (gen.templateAnswers.webpack) {
+				gen.copyTemplate('webapp-webpack-addons', '.')
+			}
+		},
+		configure: gen => {
+			if (gen.templateAnswers.webpack) {
+				gen.packageJson.merge({
+					scripts: { "build": "webpack" }
+				})
+				gen.addDevDependencies("webpack")
+			}
 		},
 		install: gen => {
 			gen.spawnCommandSync('npx', ['@jolie/jpm', 'install', '@jolie/leonardo'])
@@ -134,17 +164,20 @@ module.exports = class extends Generator {
 			answersWithoutTemplate.scripts = {
 				watch: `nodemon jolie ${answersWithoutTemplate.main}`
 			}
-			answersWithoutTemplate.devDependencies = {
-				nodemon: '^2.0.19'
-			}
+			this.addDevDependencies({ nodemon: '^2.0.19' })
 		}
-		this.answersWithoutTemplate = answersWithoutTemplate
+		// this.answersWithoutTemplate = answersWithoutTemplate
+		this.packageJson.merge(answersWithoutTemplate)
+
+		if (this.answers.template.configure) {
+			this.answers.template.configure(this)
+		}
 	}
 
 	async writing () {
 		debug('writing package.json', this.answersWithoutTemplate)
 
-		this.fs.writeJSON(this.destinationPath('package.json'), this.answersWithoutTemplate)
+		// this.fs.writeJSON(this.destinationPath('package.json'), this.answersWithoutTemplate)
 		this.answers.template.scaffold(this)
 	}
 

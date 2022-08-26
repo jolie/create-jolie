@@ -1,5 +1,9 @@
 {{< page.html}}
 {{$content}}
 Hello, you are being served by Jolie {{jolieVersion}}!
+<% if(webpack) { %>
+<p id="hello-webpack"></p>
+<script src="js/bundle.js"></script>
+<% } %>
 {{/content}}
 {{/page.html}}

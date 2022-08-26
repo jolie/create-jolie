@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html>
 	<body>
-		Hello, World!
+		<p>Hello, World!</p>
+		<% if(webpack) { %>
+		<p id="hello-webpack"></p>
+		<script src="js/bundle.js"></script>
+		<% } %>
 	</body>
 </html>

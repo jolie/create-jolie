@@ -89,6 +89,7 @@ const Templates = {
 				gen.packageJson.merge({
 					scripts: { build: 'webpack' }
 				})
+				gen.addDevDependencies({ 'webpack-cli': '^4.10.0', webpack: '5.74.0' })
 			}
 		},
 		install: gen => {

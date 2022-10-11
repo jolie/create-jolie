@@ -13,7 +13,7 @@ const Templates = {
 		scaffold: gen => {
 			gen.renderTemplate(
 				'empty/main.ol',
-				'main.ol',
+				gen.answers.main,
 				{ Main: gen.templateAnswers.mainServiceName }
 			)
 		}
@@ -26,7 +26,7 @@ const Templates = {
 		scaffold: gen => {
 			gen.renderTemplate(
 				'script/main.ol',
-				'main.ol',
+				gen.answers.main,
 				{ Main: gen.templateAnswers.mainServiceName }
 			)
 		}
@@ -40,7 +40,7 @@ const Templates = {
 		scaffold: gen => {
 			gen.renderTemplate(
 				'webapp/main.ol',
-				'main.ol',
+				gen.answers.main,
 				{ tcpPort: gen.templateAnswers.tcpPort }
 			)
 			gen.copyTemplate('webapp/web', 'web', {
@@ -72,7 +72,7 @@ const Templates = {
 		scaffold: gen => {
 			gen.renderTemplate(
 				'webapp-mustache/main.ol',
-				'main.ol',
+				gen.answers.main,
 				{ tcpPort: gen.templateAnswers.tcpPort }
 			)
 			gen.renderTemplate('webapp-mustache/web', 'web', {
@@ -193,7 +193,7 @@ module.exports = class extends Generator {
 
 		// Dockerfile
 		if (this.answers.dockerfile) {
-			let dockerParams = { main: this.answers.main }
+			const dockerParams = { main: this.answers.main }
 			if (this.templateAnswers.tcpPort) {
 				dockerParams.tcpPort = this.templateAnswers.tcpPort
 			}

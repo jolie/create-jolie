@@ -144,6 +144,18 @@ module.exports = class extends Generator {
 				default: true
 			},
 			{
+				type: 'confirm',
+				name: 'dockerfile',
+				message: 'Do you want a Dockerfile?',
+				default: true
+			},
+			{
+				type: 'confirm',
+				name: 'devcontainer',
+				message: 'Do you want a devcontainer configuration for Visual Studio Code?',
+				default: true
+			},
+			{
 				type: 'list',
 				name: 'template',
 				message: 'What project template do you want to start from?',
@@ -175,7 +187,30 @@ module.exports = class extends Generator {
 	}
 
 	async writing () {
-		this.answers.template.scaffold(this)
+		if (this.answers.template.scaffold) {
+			this.answers.template.scaffold(this)
+		}
+
+		// Dockerfile
+		if (this.answers.dockerfile) {
+			let dockerParams = { main: this.answers.main }
+			if (this.templateAnswers.tcpPort) {
+				dockerParams.tcpPort = this.templateAnswers.tcpPort
+			}
+			this.renderTemplate(
+				'docker/Dockerfile',
+				'Dockerfile',
+				dockerParams
+			)
+		}
+
+		// devcontainer config
+		if (this.answers.devcontainer) {
+			this.copyTemplate(
+				'devcontainer',
+				'.devcontainer'
+			)
+		}
 	}
 
 	install () {

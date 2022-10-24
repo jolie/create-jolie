@@ -56,10 +56,10 @@ const Templates = {
 				gen.packageJson.merge({
 					scripts: { build: 'webpack' }
 				})
+				gen.addDevDependencies({ 'webpack-cli': '^4', webpack: '^5' })
 			}
 		},
 		install: gen => {
-			gen.addDevDependencies('webpack')
 			gen.spawnCommandSync('npx', ['@jolie/jpm', 'install', '@jolie/leonardo'])
 		}
 	},
@@ -89,11 +89,10 @@ const Templates = {
 				gen.packageJson.merge({
 					scripts: { build: 'webpack' }
 				})
-				gen.addDevDependencies({ 'webpack-cli': '^4.10.0', webpack: '5.74.0' })
+				gen.addDevDependencies({ 'webpack-cli': '^4', webpack: '^5' })
 			}
 		},
 		install: gen => {
-			gen.addDevDependencies('webpack')
 			gen.spawnCommandSync('npx', ['@jolie/jpm', 'install', '@jolie/leonardo'])
 		}
 	}

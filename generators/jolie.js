@@ -43,7 +43,7 @@ const Templates = {
 				gen.answers.main,
 				{ tcpPort: gen.templateAnswers.tcpPort }
 			)
-			gen.copyTemplate('webapp/web', 'web', {
+			gen.renderTemplate('webapp/web', 'web', {
 				webpack: gen.templateAnswers.webpack,
 				tcpPort: gen.templateAnswers.tcpPort
 			})

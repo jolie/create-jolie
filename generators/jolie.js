@@ -169,7 +169,7 @@ module.exports = class extends Generator {
 	}
 
 	configuring () {
-		const { template, templateAnswers, watch, ...answersWithoutTemplate } = this.answers
+		const { template, templateAnswers, watch, dockerfile, devcontainer, ...answersWithoutTemplate } = this.answers
 		answersWithoutTemplate.keywords = answersWithoutTemplate.keywords === '' ? [] : answersWithoutTemplate.keywords.split(',')
 
 		if (watch) {

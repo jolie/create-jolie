@@ -169,13 +169,11 @@ module.exports = class extends Generator {
 	}
 
 	configuring () {
-		const { template, templateAnswers, watch, dockerfile, devcontainer, ...answersWithoutTemplate } = this.answers
+		const { template, templateAnswers, watch, dockerfile, devcontainer, test, ...answersWithoutTemplate } = this.answers
 		answersWithoutTemplate.keywords = answersWithoutTemplate.keywords === '' ? [] : answersWithoutTemplate.keywords.split(',')
-
+		answersWithoutTemplate.scripts = { test }
 		if (watch) {
-			answersWithoutTemplate.scripts = {
-				watch: `nodemon jolie ${answersWithoutTemplate.main}`
-			}
+			answersWithoutTemplate.scripts.watch = `nodemon jolie ${answersWithoutTemplate.main}`
 			this.addDevDependencies({ nodemon: '^2.0.19' })
 		}
 		this.packageJson.merge(answersWithoutTemplate)

@@ -1,0 +1,10 @@
+{
+  "params": {
+    "<%= module_name %>": [
+      {
+        "name": "<%= service_name %>",
+        "params": {}
+      }
+    ]
+  }
+}

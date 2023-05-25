@@ -132,3 +132,5 @@ dist
 
 # debugging folder
 .dbg
+
+sandbox/

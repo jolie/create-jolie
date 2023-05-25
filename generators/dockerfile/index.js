@@ -1,0 +1,30 @@
+const Generator = require('yeoman-generator')
+const debug = require('debug')('jolie-create:docker')
+
+module.exports = class extends Generator {
+	constructor (args, opts) {
+		super(args, opts)
+		this.module = opts.module
+	}
+
+	async prompting () {
+		this.answers = await this.prompt([
+			{ type: 'input', name: 'tcpPort', message: 'Container listening port', default: '8080' }
+		])
+	}
+
+	configuring () {
+
+	}
+
+	async writing () {
+		this.renderTemplate(
+			'Dockerfile',
+			'Dockerfile',
+			{
+				module: this.module,
+				tcpPort: this.answers.tcpPort ? this.answers.tcpPort : undefined
+			}
+		)
+	}
+}

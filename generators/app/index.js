@@ -5,18 +5,9 @@ const os = require('os')
 const debug = require('debug')('jolie-create')
 
 const Templates = {
-	EMPTY: {
-		value: 'Empty Jolie project',
-		prompts: [
-			{ type: 'input', name: 'mainServiceName', message: 'Name of main service', default: 'Main' }
-		],
-		scaffold: gen => {
-			gen.renderTemplate(
-				'empty/main.ol',
-				gen.answers.main,
-				{ Main: gen.templateAnswers.mainServiceName }
-			)
-		}
+	SERVICE: {
+		value: 'Jolie Service',
+		generator: require.resolve('../service')
 	},
 	SCRIPT: {
 		value: 'Jolie script',
@@ -104,8 +95,6 @@ module.exports = class extends Generator {
 		// Calling the super constructor is important so our generator is correctly set up
 		super(args, opts)
 		this.env.options.nodePackageManager = 'npm'
-		this.argument('packagename', { type: String, required: false })
-		debug('options: ', this.options)
 	}
 
 	initializing () {
@@ -113,96 +102,105 @@ module.exports = class extends Generator {
 	}
 
 	async prompting () {
-		this.answers = await this.prompt([
+		this.packageJSONAnswers = await this.prompt([
 			{
 				type: 'input',
 				name: 'name',
-				message: 'package name',
+				message: 'Package name',
 				default: path.basename(process.cwd())
 			},
 			{
 				type: 'input',
 				name: 'version',
-				default: '0.1.0',
-				validate (ip) {
-					console.log(ip)
-					return semver.valid(ip) !== null
+				message: 'Version',
+				default: '0.0.0',
+				validate (version) {
+					if (semver.valid(version) === null) {
+						return 'The version is invalid, please specify a valid Semantic Versioning'
+					} else {
+						return true
+					}
 				}
 			},
-			{ type: 'input', name: 'description' },
-			{ type: 'input', name: 'main', message: 'entry point', default: 'main.ol' },
-			{ type: 'input', name: 'test', message: 'test command', default: 'echo "Error: no test specified" && exit 1' },
-			{ type: 'input', name: 'repo', message: 'git repository' },
-			{ type: 'input', name: 'keywords', message: 'keywords (comma-delimited)', default: '' },
-			{ type: 'input', name: 'author', default: os.userInfo().username },
-			{ type: 'input', name: 'license', default: 'ISC' },
-			{
-				type: 'confirm',
-				name: 'watch',
-				message: 'Do you want to a "watch" script for live development (hot reload)?',
-				default: true
-			},
-			{
-				type: 'confirm',
-				name: 'dockerfile',
-				message: 'Do you want a Dockerfile?',
-				default: true
-			},
-			{
-				type: 'confirm',
-				name: 'devcontainer',
-				message: 'Do you want a devcontainer configuration for Visual Studio Code?',
-				default: true
-			},
+			{ type: 'input', name: 'description', message: 'Package description' },
+			{ type: 'input', name: 'repo', message: 'Git repository URL' },
+			{ type: 'input', name: 'keywords', message: 'Package keywords (comma-delimited)', default: '' },
+			{ type: 'input', name: 'author', message: 'Author', default: os.userInfo().username },
+			{ type: 'input', name: 'license', message: 'License', default: 'ISC' }
+		])
+		const { moduleName } = await this.prompt({ type: 'input', name: 'moduleName', message: 'Module file name', default: 'main.ol' })
+		debug('answers', this.packageJSONAnswers)
+		debug('moduleName', moduleName)
+
+		this.projectTemplate = await this.prompt([
 			{
 				type: 'list',
 				name: 'template',
-				message: 'What project template do you want to start from?',
+				message: 'project template',
 				choices: Object.entries(Templates).map(([_, template]) => {
 					return { name: template.value, value: template }
 				})
 			}
 		])
-		debug('answers', this.answers)
-		this.templateAnswers = await this.prompt(this.answers.template.prompts)
-		debug('templateAnswers', this.templateAnswers)
+
+		this.jot = await this.prompt({
+			type: 'confirm',
+			name: 'jot',
+			message: 'Do you want to use jot testing suit?',
+			default: true
+		})
+
+		this.composeWith(this.projectTemplate.template.generator, { jot: this.jot, module: moduleName })
+
+		this.watch = await this.prompt({
+			type: 'confirm',
+			name: 'watch',
+			message: 'Do you want to a "watch" script for live development (hot reload)?',
+			default: true
+		})
+		const { dockerfile } = await this.prompt({
+			type: 'confirm',
+			name: 'dockerfile',
+			message: 'Do you want a Dockerfile?',
+			default: true
+		})
+		if (dockerfile) {
+			this.composeWith(require.resolve('../dockerfile'), { module: moduleName })
+		}
+		this.devcontainer = await this.prompt({
+			type: 'confirm',
+			name: 'devcontainer',
+			message: 'Do you want a devcontainer configuration for Visual Studio Code?',
+			default: true
+		})
 	}
 
 	configuring () {
-		const { template, templateAnswers, watch, dockerfile, devcontainer, test, ...answersWithoutTemplate } = this.answers
-		answersWithoutTemplate.keywords = answersWithoutTemplate.keywords === '' ? [] : answersWithoutTemplate.keywords.split(',')
-		answersWithoutTemplate.scripts = { test }
-		if (watch) {
-			answersWithoutTemplate.scripts.watch = `nodemon jolie ${answersWithoutTemplate.main}`
-			this.addDevDependencies({ nodemon: '^2.0.19' })
+		this.packageJSONAnswers.keywords = this.packageJSONAnswers.keywords === '' ? [] : this.packageJSONAnswers.keywords.split(',')
+		this.packageJSONAnswers.scripts = {}
+		if (this.watch) {
+			this.packageJSONAnswers.scripts.watch = `nodemon jolie ${this.packageJSONAnswers.main}`
 		}
-		this.packageJson.merge(answersWithoutTemplate)
-
-		if (this.answers.template.configure) {
-			this.answers.template.configure(this)
+		if (this.jot) {
+			this.packageJSONAnswers.scripts.test = 'jot jot.json'
 		}
+		this.packageJson.merge(this.packageJSONAnswers)
 	}
 
 	async writing () {
-		if (this.answers.template.scaffold) {
-			this.answers.template.scaffold(this)
+		debug('writing')
+		// if (this.answers.template.scaffold) {
+		// 	this.answers.template.scaffold(this)
+		// }
+		if (this.watch) {
+			await this.addDevDependencies('nodemon')
 		}
-
-		// Dockerfile
-		if (this.answers.dockerfile) {
-			const dockerParams = { main: this.answers.main }
-			if (this.templateAnswers.tcpPort) {
-				dockerParams.tcpPort = this.templateAnswers.tcpPort
-			}
-			this.renderTemplate(
-				'docker/Dockerfile',
-				'Dockerfile',
-				dockerParams
-			)
+		if (this.jot) {
+			await this.addDevDependencies('@jolie/jot')
 		}
 
 		// devcontainer config
-		if (this.answers.devcontainer) {
+		if (this.devcontainer) {
 			this.copyTemplate(
 				'devcontainer',
 				'.devcontainer'
@@ -211,14 +209,18 @@ module.exports = class extends Generator {
 	}
 
 	install () {
+		debug('install')
+		// this.fs.writeJSON(this.destinationPath('package.json'), this.packageJSONAnswers)
 	}
 
 	end () {
+		debug('end')
+		// this.fs.extendJSON(this.destinationPath('package.json'), this.packageJSONAnswers)
 		this.spawnCommandSync('npx', ['@jolie/jpm', 'init'])
 
-		if (this.answers.template.install) {
-			this.answers.template.install(this)
-		}
+		// if (this.answers.template.install) {
+		// 	this.answers.template.install(this)
+		// }
 		this.log('Jolie project initialised')
 	}
 }

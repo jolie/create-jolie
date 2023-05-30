@@ -6,91 +6,18 @@ const debug = require('debug')('jolie-create')
 
 const Templates = {
 	SERVICE: {
-		value: 'Jolie Service',
+		label: 'Jolie Service',
+		value: 'service',
 		generator: require.resolve('../service')
 	},
-	SCRIPT: {
-		value: 'Jolie script',
-		prompts: [
-			{ type: 'input', name: 'mainServiceName', message: 'Name of main service', default: 'Main' }
-		],
-		scaffold: gen => {
-			gen.renderTemplate(
-				'script/main.ol',
-				gen.answers.main,
-				{ Main: gen.templateAnswers.mainServiceName }
-			)
-		}
-	},
 	WEB_APP: {
-		value: 'Web application (simple)',
-		prompts: [
-			{ type: 'confirm', name: 'webpack', message: 'Do you want to use webpack?' },
-			{ type: 'input', name: 'tcpPort', message: 'TCP port for receiving HTTP requests', default: '8080' }
-		],
-		scaffold: gen => {
-			gen.renderTemplate(
-				'webapp/main.ol',
-				gen.answers.main,
-				{ tcpPort: gen.templateAnswers.tcpPort }
-			)
-			gen.renderTemplate('webapp/web', 'web', {
-				webpack: gen.templateAnswers.webpack,
-				tcpPort: gen.templateAnswers.tcpPort
-			})
-			if (gen.templateAnswers.webpack) {
-				gen.copyTemplate('webapp-webpack-addons', '.')
-			}
-		},
-		configure: gen => {
-			if (gen.templateAnswers.webpack) {
-				gen.packageJson.merge({
-					scripts: { build: 'webpack' }
-				})
-				gen.addDevDependencies({ 'webpack-cli': '^4', webpack: '^5' })
-			}
-		},
-		install: gen => {
-			gen.spawnCommandSync('npx', ['@jolie/jpm', 'install', '@jolie/leonardo'])
-		}
-	},
-	WEB_APP_MUSTACHE: {
-		value: 'Web application (with Mustache templating)',
-		prompts: [
-			{ type: 'confirm', name: 'webpack', message: 'Do you want to use webpack?' },
-			{ type: 'input', name: 'tcpPort', message: 'TCP port for receiving HTTP requests', default: '8080' }
-		],
-		scaffold: gen => {
-			gen.renderTemplate(
-				'webapp-mustache/main.ol',
-				gen.answers.main,
-				{ tcpPort: gen.templateAnswers.tcpPort }
-			)
-			gen.renderTemplate('webapp-mustache/web', 'web', {
-				webpack: gen.templateAnswers.webpack,
-				tcpPort: gen.templateAnswers.tcpPort
-			})
-			gen.copyTemplate('webapp-mustache/templates', 'templates')
-			if (gen.templateAnswers.webpack) {
-				gen.copyTemplate('webapp-webpack-addons', '.')
-			}
-		},
-		configure: gen => {
-			if (gen.templateAnswers.webpack) {
-				gen.packageJson.merge({
-					scripts: { build: 'webpack' }
-				})
-				gen.addDevDependencies({ 'webpack-cli': '^4', webpack: '^5' })
-			}
-		},
-		install: gen => {
-			gen.spawnCommandSync('npx', ['@jolie/jpm', 'install', '@jolie/leonardo'])
-		}
+		label: 'Web application',
+		value: 'webapp',
+		generator: require.resolve('../web')
 	}
 }
 
 module.exports = class extends Generator {
-	// The name `constructor` is important here
 	constructor (args, opts) {
 		// Calling the super constructor is important so our generator is correctly set up
 		super(args, opts)
@@ -128,9 +55,8 @@ module.exports = class extends Generator {
 			{ type: 'input', name: 'author', message: 'Author', default: os.userInfo().username },
 			{ type: 'input', name: 'license', message: 'License', default: 'ISC' }
 		])
-		const { moduleName } = await this.prompt({ type: 'input', name: 'moduleName', message: 'Module file name', default: 'main.ol' })
-		debug('answers', this.packageJSONAnswers)
-		debug('moduleName', moduleName)
+		this.module = await this.prompt({ type: 'input', name: 'name', message: 'Module file name', default: 'main.ol' })
+		debug('moduleName', this.module.name)
 
 		this.projectTemplate = await this.prompt([
 			{
@@ -138,19 +64,21 @@ module.exports = class extends Generator {
 				name: 'template',
 				message: 'project template',
 				choices: Object.entries(Templates).map(([_, template]) => {
-					return { name: template.value, value: template }
+					return { name: template.label, value: template }
 				})
 			}
 		])
 
-		this.jot = await this.prompt({
-			type: 'confirm',
-			name: 'jot',
-			message: 'Do you want to use jot testing suit?',
-			default: true
-		})
+		if (this.projectTemplate.template.value === 'service') {
+			this.jot = await this.prompt({
+				type: 'confirm',
+				name: 'jot',
+				message: 'Do you want to use jot testing suit?',
+				default: true
+			})
+		}
 
-		this.composeWith(this.projectTemplate.template.generator, { jot: this.jot, module: moduleName })
+		this.composeWith(this.projectTemplate.template.generator, { jot: this.jot, module: this.module.name })
 
 		this.watch = await this.prompt({
 			type: 'confirm',
@@ -165,7 +93,7 @@ module.exports = class extends Generator {
 			default: true
 		})
 		if (dockerfile) {
-			this.composeWith(require.resolve('../dockerfile'), { module: moduleName })
+			this.composeWith(require.resolve('../dockerfile'), { module: this.module.name })
 		}
 		this.devcontainer = await this.prompt({
 			type: 'confirm',
@@ -177,9 +105,11 @@ module.exports = class extends Generator {
 
 	configuring () {
 		this.packageJSONAnswers.keywords = this.packageJSONAnswers.keywords === '' ? [] : this.packageJSONAnswers.keywords.split(',')
-		this.packageJSONAnswers.scripts = {}
+		this.packageJSONAnswers.scripts = {
+			start: `jolie ${this.module.name}`
+		}
 		if (this.watch) {
-			this.packageJSONAnswers.scripts.watch = `nodemon jolie ${this.packageJSONAnswers.main}`
+			this.packageJSONAnswers.scripts.watch = `nodemon jolie ${this.module.name}`
 		}
 		if (this.jot) {
 			this.packageJSONAnswers.scripts.test = 'jot jot.json'
@@ -189,9 +119,6 @@ module.exports = class extends Generator {
 
 	async writing () {
 		debug('writing')
-		// if (this.answers.template.scaffold) {
-		// 	this.answers.template.scaffold(this)
-		// }
 		if (this.watch) {
 			await this.addDevDependencies('nodemon')
 		}
@@ -210,17 +137,12 @@ module.exports = class extends Generator {
 
 	install () {
 		debug('install')
-		// this.fs.writeJSON(this.destinationPath('package.json'), this.packageJSONAnswers)
+		this.spawnCommandSync('npx', ['@jolie/jpm', 'init'])
 	}
 
 	end () {
 		debug('end')
-		// this.fs.extendJSON(this.destinationPath('package.json'), this.packageJSONAnswers)
-		this.spawnCommandSync('npx', ['@jolie/jpm', 'init'])
-
-		// if (this.answers.template.install) {
-		// 	this.answers.template.install(this)
-		// }
+		this.fs.delete('.yo-rc.json')
 		this.log('Jolie project initialised')
 	}
 }

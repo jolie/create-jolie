@@ -18,8 +18,7 @@ module.exports = class extends Generator {
 				default: 'empty',
 				choices: [
 					{ name: 'empty service', value: 'empty' },
-					{ name: 'script', value: 'script' },
-					{ name: 'web', value: 'web' }
+					{ name: 'script', value: 'script' }
 				]
 			},
 			{ type: 'input', name: 'main_service', message: 'Name of main service', default: 'Main' }

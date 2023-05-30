@@ -8,9 +8,14 @@ module.exports = class extends Generator {
 	}
 
 	async prompting () {
-		this.answers = await this.prompt([
-			{ type: 'input', name: 'tcpPort', message: 'Container listening port', default: '8080' }
-		])
+		const configuredPort = this.config.get('port')
+		if (configuredPort) {
+			this.answers = { tcpPort: configuredPort }
+		} else {
+			this.answers = await this.prompt([
+				{ type: 'input', name: 'tcpPort', message: 'Container listening port', default: '8080' }
+			])
+		}
 	}
 
 	configuring () {

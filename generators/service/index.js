@@ -1,84 +1,121 @@
 const Generator = require('yeoman-generator')
-const debug = require('debug')('jolie-create:service')
 
 module.exports = class extends Generator {
 	constructor (args, opts) {
 		super(args, opts)
-		debug(opts)
 		this.module = opts.module
-		this.jot = opts.jot
+		this.packageJSONAnswers = opts.packageJSONAnswers
 	}
 
 	async prompting () {
 		this.answers = await this.prompt([
+			{ type: 'input', name: 'main_service', message: 'Name of main service', default: 'Main' },
 			{
 				type: 'list',
 				name: 'type',
 				message: 'Choose type of the service',
 				default: 'empty',
 				choices: [
-					{ name: 'empty service', value: 'empty' },
-					{ name: 'script', value: 'script' }
+					// { name: 'empty service', value: 'empty' },
+					// { name: 'script', value: 'script' },
+					{ name: 'java service', value: 'java' }
 				]
-			},
-			{ type: 'input', name: 'main_service', message: 'Name of main service', default: 'Main' }
+			}
 		])
+
+		this.watchAnswer = await this.prompt({
+			type: 'confirm',
+			name: 'watch',
+			message: 'Do you want to a "watch" script for live development (hot reload)?',
+			default: true
+		})
+
+		this.jotAnswer = await this.prompt({
+			type: 'confirm',
+			name: 'useJot',
+			message: 'Do you want to use jot testing suit?',
+			default: true
+		})
+
+		if (this.answers.type !== 'empty') {
+			this.composeWith(require.resolve(`./${this.answers.type}`), { module: this.module, main_service: this.answers.main_service, packageJSONAnswers: this.packageJSONAnswers })
+		}
 	}
 
-	configuring () {
-		this.service_data = {
-			name: this.answers.main_service
+	async configuring () {
+		this.config.merge({
+			service_data: {
+				name: this.answers.main_service
+			}
+		})
+
+		if (this.answers.type === 'empty' && this.jotAnswer.useJot) {
+			this.config.merge({
+				service_data: {
+					interfaces: [{
+						name: 'Iface',
+						rrs: [{
+							name: 'hello',
+							requestType: 'void',
+							responseType: 'string'
+						}],
+						ows: []
+					}],
+					input_ports: [{
+						name: 'IP',
+						location: 'local',
+						protocol: 'sodep',
+						interfaces: 'Iface'
+					}],
+					execution: 'concurrent',
+					code: `[hello()(res) {
+            res = "World"
+        }]`
+				}
+			})
 		}
-		if (this.answers.type === 'script') {
-			this.service_data.script = true
-			this.service_data.imports = [{
-				module: 'console',
-				symbols: [{
-					target: 'Console'
-				}]
-			}]
-			this.service_data.embeds = [
-				'Console'
-			]
-			this.service_data.code = 'println@Console("Hello World!")()'
-		} else {
-			this.service_data.script = false
+
+		if (this.answers.type === 'empty' || this.answers.type === 'script') {
+			this.packageJson.merge({
+				scripts: {
+					start: `jolie ${this.module.name}`
+				}
+			})
 		}
-		if (this.jot) {
+
+		if (this.jotAnswer.useJot) {
 			this.test_data = {
 				module_name: this.module,
 				service_name: this.answers.main_service
 			}
-			this.service_data.interfaces = [{
-				name: 'Iface',
-				rrs: [{
-					name: 'hello',
-					requestType: 'void',
-					responseType: 'string'
-				}],
-				ows: []
-			}]
-			this.service_data.input_ports = [{
-				name: 'IP',
-				location: 'local',
-				protocol: 'sodep',
-				interfaces: 'Iface'
-			}]
-			this.execution = 'concurrent'
-			this.service_data.code = `[hello()(res) {
-            res = "World"
-        }]`
+
+			this.packageJson.merge({
+				scripts: {
+					test: 'jot jot.json'
+				}
+			})
+			await this.addDevDependencies('@jolie/jot')
+		}
+
+		if (this.watchAnswer.watch) {
+			this.packageJson.merge({
+				scripts: {
+					watch: `nodemon jolie ${this.module}`
+				}
+			})
+			await this.addDevDependencies('nodemon')
 		}
 	}
 
 	async writing () {
-		if (this.jot) {
+		if (this.jotAnswer.useJot) {
 			this.renderTemplate('test', '.', this.test_data)
 		}
+
 		this.renderTemplate(
 			'service/service.ol',
 			this.module,
-			this.service_data
+			this.config.get('service_data')
 		)
 	}
 }

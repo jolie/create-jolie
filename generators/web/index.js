@@ -1,10 +1,8 @@
 const Generator = require('yeoman-generator')
-const debug = require('debug')('jolie-create:web')
 
 module.exports = class extends Generator {
 	constructor (args, opts) {
 		super(args, opts)
-		debug(opts)
 		this.module = opts.module
 	}
 
@@ -17,12 +15,12 @@ module.exports = class extends Generator {
 		this.config.set('port', this.answers.tcpPort)
 	}
 
-	configuring () {
+	async configuring () {
 		if (this.answers.webpack) {
 			this.packageJson.merge({
 				scripts: { build: 'webpack' }
 			})
-			this.addDevDependencies({ 'webpack-cli': '^4', webpack: '^5' })
+			await this.addDevDependencies({ 'webpack-cli': '^4', webpack: '^5' })
 		}
 	}
 

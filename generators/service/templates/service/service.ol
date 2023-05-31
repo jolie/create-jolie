@@ -1,4 +1,4 @@
-<%_ if (script) { _%>
+<%_ if (typeof (script) !== 'undefined' &&  script) { _%>
 #!/bin/env jolie
 <%_ } _%>
 
@@ -48,6 +48,11 @@ service <%= name %> {
     execution: <%= execution %>
     <%_ } _%>
 
+    <%_ if (typeof (foreign) !== 'undefined') { _%>
+	foreign <%= foreign.type _%>{
+		class: "<%= foreign.class _%>"
+	}
+    <%_ } else {  _%>
 	main {
         <%_ if (typeof (code) !== 'undefined') { _%>
         <%- code %>
@@ -55,6 +60,8 @@ service <%= name %> {
 		// Your code here
         <%_ } _%>
 	}
+    <%_ } _%>
+
 }
 <%#
 {

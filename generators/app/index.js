@@ -2,7 +2,6 @@ const Generator = require('yeoman-generator')
 const path = require('path')
 const semver = require('semver')
 const os = require('os')
-const debug = require('debug')('jolie-create')
 
 const Templates = {
 	SERVICE: {
@@ -56,7 +55,7 @@ module.exports = class extends Generator {
 			{ type: 'input', name: 'license', message: 'License', default: 'ISC' }
 		])
 		this.module = await this.prompt({ type: 'input', name: 'name', message: 'Module file name', default: 'main.ol' })
-		debug('moduleName', this.module.name)
+		this.debug('moduleName', this.module.name)
 
 		this.projectTemplate = await this.prompt([
 			{
@@ -69,63 +68,45 @@ module.exports = class extends Generator {
 			}
 		])
 
-		if (this.projectTemplate.template.value === 'service') {
-			this.jot = await this.prompt({
-				type: 'confirm',
-				name: 'jot',
-				message: 'Do you want to use jot testing suit?',
-				default: true
-			})
-		}
-
-		this.composeWith(this.projectTemplate.template.generator, { jot: this.jot, module: this.module.name })
-
-		this.watch = await this.prompt({
-			type: 'confirm',
-			name: 'watch',
-			message: 'Do you want to a "watch" script for live development (hot reload)?',
-			default: true
-		})
-		const { dockerfile } = await this.prompt({
-			type: 'confirm',
-			name: 'dockerfile',
-			message: 'Do you want a Dockerfile?',
-			default: true
-		})
-		if (dockerfile) {
-			this.composeWith(require.resolve('../dockerfile'), { module: this.module.name })
-		}
-		this.devcontainer = await this.prompt({
-			type: 'confirm',
-			name: 'devcontainer',
-			message: 'Do you want a devcontainer configuration for Visual Studio Code?',
-			default: true
-		})
+		this.composeWith(this.projectTemplate.template.generator, { module: this.module.name, packageJSONAnswers: this.packageJSONAnswers })
 	}
 
 	configuring () {
 		this.packageJSONAnswers.keywords = this.packageJSONAnswers.keywords === '' ? [] : this.packageJSONAnswers.keywords.split(',')
-		this.packageJSONAnswers.scripts = {
-			start: `jolie ${this.module.name}`
-		}
-		if (this.watch) {
-			this.packageJSONAnswers.scripts.watch = `nodemon jolie ${this.module.name}`
-		}
-		if (this.jot) {
-			this.packageJSONAnswers.scripts.test = 'jot jot.json'
-		}
 		this.packageJson.merge(this.packageJSONAnswers)
 	}
 
-	async writing () {
-		debug('writing')
-		if (this.watch) {
-			await this.addDevDependencies('nodemon')
-		}
-		if (this.jot) {
-			await this.addDevDependencies('@jolie/jot')
+	async developmentEnvironment () {
+		async function dockerPrompts () {
+			const { dockerfile } = await this.prompt({
+				type: 'confirm',
+				name: 'dockerfile',
+				message: 'Do you want a Dockerfile?',
+				default: true
+			})
+			if (dockerfile) {
+				this.composeWith(require.resolve('../dockerfile'), { module: this.module.name })
+			}
 		}
 
+		async function devContainerPrompts () {
+			this.devcontainer = await this.prompt({
+				type: 'confirm',
+				name: 'devcontainer',
+				message: 'Do you want a devcontainer configuration for Visual Studio Code?',
+				default: true
+			})
+		}
+
+		this.dockerPrompts = dockerPrompts.bind(this)
+		this.devContainerPrompts = devContainerPrompts.bind(this)
+
+		await this.dockerPrompts(this)
+		await this.devContainerPrompts(this)
+	}
+
+	async writing () {
+		this.debug('writing')
 		// devcontainer config
 		if (this.devcontainer) {
 			this.copyTemplate(
@@ -136,12 +117,12 @@ module.exports = class extends Generator {
 	}
 
 	install () {
-		debug('install')
+		this.debug('install')
 		this.spawnCommandSync('npx', ['@jolie/jpm', 'init'])
 	}
 
 	end () {
-		debug('end')
+		this.debug('end')
 		this.fs.delete('.yo-rc.json')
 		this.log('Jolie project initialised')
 	}

@@ -12,7 +12,7 @@
                 "<node_internals>/**"
             ],
             "env": {
-                "DEBUG": "jolie-create*"
+                "DEBUG": "jolie:*"
             },
             "program": "${workspaceFolder}/main.js",
             "console": "integratedTerminal",

@@ -8,7 +8,6 @@
   },
   "scripts": {
     "start": "node main.js",
-    "debug": "rm -rf .dbg; mkdir .dbg && cd .dbg && DEBUG=jolie-create* ../main.js ; cd ..",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -32,7 +31,6 @@
   ],
   "homepage": "https://github.com/jolie/create-jolie#readme",
   "dependencies": {
-    "debug": "^4.3.4",
     "semver": "^7.3.7",
     "shelljs": "^0.8.5",
     "yeoman-environment": "^3.10.0",

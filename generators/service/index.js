@@ -33,7 +33,7 @@ module.exports = class extends Generator {
 		this.jotAnswer = await this.prompt({
 			type: 'confirm',
 			name: 'useJot',
-			message: 'Do you want to use jot testing suit?',
+			message: 'Do you want to use the Jot testing suite?',
 			default: true
 		})
 

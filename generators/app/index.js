@@ -2,6 +2,9 @@ const Generator = require('yeoman-generator')
 const path = require('path')
 const semver = require('semver')
 const os = require('os')
+const chalk = require('chalk')
+const boxen = require('boxen')
+const dedent = require('dedent')
 
 const Templates = {
 	SERVICE: {
@@ -20,7 +23,6 @@ module.exports = class extends Generator {
 	constructor (args, opts) {
 		// Calling the super constructor is important so our generator is correctly set up
 		super(args, opts)
-		this.env.options.nodePackageManager = 'npm'
 	}
 
 	initializing () {
@@ -68,12 +70,16 @@ module.exports = class extends Generator {
 			}
 		])
 
-		this.composeWith(this.projectTemplate.template.generator, { module: this.module.name, packageJSONAnswers: this.packageJSONAnswers })
+		this.composeWith(this.projectTemplate.template.generator, { module: this.module, packageJSONAnswers: this.packageJSONAnswers })
 	}
 
 	configuring () {
 		this.packageJSONAnswers.keywords = this.packageJSONAnswers.keywords === '' ? [] : this.packageJSONAnswers.keywords.split(',')
-		this.packageJson.merge(this.packageJSONAnswers)
+		this.packageJson.merge({
+			...this.packageJSONAnswers
+		})
+		this.addDevDependencies('@jolie/jpm')
+		this.packageJson.merge({ scripts: { postinstall: 'jpm install' } })
 	}
 
 	async developmentEnvironment () {
@@ -118,12 +124,17 @@ module.exports = class extends Generator {
 
 	install () {
 		this.debug('install')
-		this.spawnCommandSync('npx', ['@jolie/jpm', 'init'])
 	}
 
 	end () {
 		this.debug('end')
 		this.fs.delete('.yo-rc.json')
-		this.log('Jolie project initialised')
+		this.spawnCommandSync('jpm', ['init'])
+		this.log(boxen(dedent`🎇 Jolie project initialised 🎆
+			to install npm dependencies run
+			$ ${chalk.blueBright('npm install')}
+			to install jolie dependencies run
+			$ ${chalk.blueBright('jpm install')}
+		`, { padding: 1 }))
 	}
 }

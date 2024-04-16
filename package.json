@@ -31,6 +31,9 @@
   ],
   "homepage": "https://github.com/jolie/create-jolie#readme",
   "dependencies": {
+    "boxen": "^5.1.2",
+    "chalk": "^4.1.2",
+    "dedent": "^1.5.3",
     "semver": "^7.3.7",
     "shelljs": "^0.8.5",
     "yeoman-environment": "^3.10.0",

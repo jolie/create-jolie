@@ -28,7 +28,7 @@ module.exports = class extends Generator {
 			}
 		})
 		this.packageJson.merge({
-			main: this.module
+			main: this.module.name
 		})
 	}
 }

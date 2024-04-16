@@ -85,7 +85,7 @@ module.exports = class extends Generator {
 
 		if (this.jotAnswer.useJot) {
 			this.test_data = {
-				module_name: this.module,
+				module_name: this.module.name,
 				service_name: this.answers.main_service
 			}
 
@@ -100,7 +100,7 @@ module.exports = class extends Generator {
 		if (this.watchAnswer.watch) {
 			this.packageJson.merge({
 				scripts: {
-					watch: `nodemon jolie ${this.module}`
+					watch: `nodemon jolie ${this.module.name}`
 				}
 			})
 			await this.addDevDependencies('nodemon')
@@ -114,7 +114,7 @@ module.exports = class extends Generator {
 
 		this.renderTemplate(
 			'service/service.ol',
-			this.module,
+			this.module.name,
 			this.config.get('service_data')
 		)
 	}

@@ -55,7 +55,7 @@ module.exports = class extends Generator {
 			{ type: 'input', name: 'license', message: 'License', default: 'ISC' }
 		])
 		this.module = await this.prompt({ type: 'input', name: 'name', message: 'Module file name', default: 'main.ol' })
-		this.debug('moduleName', this.module.name)
+		this.debug('moduleName', this.module)
 
 		this.projectTemplate = await this.prompt([
 			{
@@ -85,7 +85,7 @@ module.exports = class extends Generator {
 				default: true
 			})
 			if (dockerfile) {
-				this.composeWith(require.resolve('../dockerfile'), { module: this.module.name })
+				this.composeWith(require.resolve('../dockerfile'), { module: this.module })
 			}
 		}
 

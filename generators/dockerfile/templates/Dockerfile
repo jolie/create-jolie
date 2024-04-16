@@ -5,4 +5,4 @@ COPY . .
 <% if (typeof tcpPort !== 'undefined') { %>
 EXPOSE <%= tcpPort %>
 <% } %>
-CMD ["jolie", "<%= module %>"]
+CMD ["jolie", "<%= moduleName %>"]

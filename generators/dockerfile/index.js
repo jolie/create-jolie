@@ -27,7 +27,7 @@ module.exports = class extends Generator {
 			'Dockerfile',
 			'Dockerfile',
 			{
-				module: this.module,
+				moduleName: this.module.name,
 				tcpPort: this.answers.tcpPort ? this.answers.tcpPort : undefined
 			}
 		)

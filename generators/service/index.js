@@ -1,4 +1,5 @@
 const Generator = require('yeoman-generator')
+const latestVersion = require('latest-version')
 
 module.exports = class extends Generator {
 	constructor (args, opts) {
@@ -94,7 +95,8 @@ module.exports = class extends Generator {
 					test: 'jot jot.json'
 				}
 			})
-			await this.addDevDependencies('@jolie/jot')
+			const jotVersion = await latestVersion('@jolie/jot')
+			await this.addDevDependencies({ '@jolie/jot': `^${jotVersion}` })
 		}
 
 		if (this.watchAnswer.watch) {
@@ -103,7 +105,8 @@ module.exports = class extends Generator {
 					watch: `nodemon jolie ${this.module.name}`
 				}
 			})
-			await this.addDevDependencies('nodemon')
+			const nodemonVersion = await latestVersion('nodemon')
+			await this.addDevDependencies({ nodemon: `^${nodemonVersion}` })
 		}
 	}
 

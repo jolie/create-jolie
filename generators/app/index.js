@@ -21,7 +21,6 @@ const Templates = {
 
 module.exports = class extends Generator {
 	constructor (args, opts) {
-		// Calling the super constructor is important so our generator is correctly set up
 		super(args, opts)
 	}
 
@@ -78,8 +77,7 @@ module.exports = class extends Generator {
 		this.packageJson.merge({
 			...this.packageJSONAnswers
 		})
-		this.addDevDependencies('@jolie/jpm')
-		this.packageJson.merge({ scripts: { postinstall: 'jpm install' } })
+		this.packageJson.merge({ scripts: { postinstall: 'npx @jolie/jpm install' } })
 	}
 
 	async developmentEnvironment () {
@@ -131,10 +129,8 @@ module.exports = class extends Generator {
 		this.fs.delete('.yo-rc.json')
 		this.spawnCommandSync('jpm', ['init'])
 		this.log(boxen(dedent`🎇 Jolie project initialised 🎆
-			to install npm dependencies run
+			to install dependencies run
 			$ ${chalk.blueBright('npm install')}
-			to install jolie dependencies run
-			$ ${chalk.blueBright('jpm install')}
 		`, { padding: 1 }))
 	}
 }

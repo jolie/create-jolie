@@ -94,12 +94,14 @@ module.exports = class extends Generator {
 		}
 
 		async function devContainerPrompts () {
-			this.devcontainer = await this.prompt({
+			const { devcontainer } = await this.prompt({
 				type: 'confirm',
 				name: 'devcontainer',
 				message: 'Do you want a devcontainer configuration for Visual Studio Code?',
 				default: true
 			})
+
+			this.devcontainer = devcontainer
 		}
 
 		this.dockerPrompts = dockerPrompts.bind(this)

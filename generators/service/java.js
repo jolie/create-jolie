@@ -10,8 +10,8 @@ module.exports = class extends Generator {
 
 	async prompting () {
 		const checkVersion = version => {
-			const v = Number.parseInt(version)
-			if (version !== v) { return 'The Java version must be an integer' }
+			const v = Number(version)
+			if (isNaN(v)) { return 'The Java version must be a number' }
 			if (v < 21) { return 'The Java version must at least be 21' }
 			return true
 		}

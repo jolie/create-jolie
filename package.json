@@ -38,7 +38,7 @@
     "semver": "^7.3.7",
     "shelljs": "^0.8.5",
     "yeoman-environment": "^3.10.0",
-    "yeoman-generator": "^5.7.0"
+    "yeoman-generator": "^5.10.0"
   },
   "devDependencies": {
     "eslint": "^8.21.0",

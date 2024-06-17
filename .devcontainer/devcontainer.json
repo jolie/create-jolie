@@ -1,0 +1,12 @@
+{
+	"image": "jolielang/jolie",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"dbaeumer.vscode-eslint",
+				"eamodio.gitlens",
+				"GitHub.vscode-pull-request-github"
+			]
+		}
+	}
+}

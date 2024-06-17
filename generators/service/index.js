@@ -1,5 +1,4 @@
 const Generator = require('yeoman-generator')
-const latestVersion = require('latest-version')
 
 module.exports = class extends Generator {
 	constructor (args, opts) {
@@ -9,116 +8,33 @@ module.exports = class extends Generator {
 	}
 
 	async prompting () {
-		this.answers = await this.prompt([
-			{ type: 'input', name: 'main_service', message: 'Name of main service', default: 'Main' },
+		const pascalCaseName = this.packageJSONAnswers.name.replace(/\w+/g, function (w) { return w[0].toUpperCase() + w.slice(1).toLowerCase() })
+		this.service = await this.prompt([
+			{ type: 'input', name: 'name', message: 'Service name', default: pascalCaseName },
 			{
 				type: 'list',
-				name: 'type',
-				message: 'Choose type of the service',
-				default: 'empty',
+				name: 'language',
+				message: 'Implementation language',
 				choices: [
-					{ name: 'empty service', value: 'empty' },
-					{ name: 'script', value: 'script' },
-					{ name: 'java service', value: 'java' }
+					{ name: 'Jolie', value: 'jolie' },
+					{ name: 'Java (requires Jolie >= 1.13)', value: 'java' }
 				]
 			}
 		])
 
-		this.watchAnswer = await this.prompt({
-			type: 'confirm',
-			name: 'watch',
-			message: 'Do you want to a "watch" script for live development (hot reload)?',
-			default: true
-		})
-
-		this.jotAnswer = await this.prompt({
-			type: 'confirm',
-			name: 'useJot',
-			message: 'Do you want to use the Jot testing suite?',
-			default: true
-		})
-
-		if (this.answers.type !== 'empty') {
-			this.composeWith(require.resolve(`./${this.answers.type}`), { module: this.module, main_service: this.answers.main_service, packageJSONAnswers: this.packageJSONAnswers })
-		}
-	}
-
-	async configuring () {
-		this.config.merge({
-			service_data: {
-				name: this.answers.main_service
-			}
-		})
-
-		if (this.answers.type === 'empty' && this.jotAnswer.useJot) {
-			this.config.merge({
-				service_data: {
-					interfaces: [{
-						name: 'Iface',
-						rrs: [{
-							name: 'hello',
-							requestType: 'void',
-							responseType: 'string'
-						}],
-						ows: []
-					}],
-					input_ports: [{
-						name: 'IP',
-						location: 'local',
-						protocol: 'sodep',
-						interfaces: 'Iface'
-					}],
-					execution: 'concurrent',
-					code: `[hello()(res) {
-            res = "World"
-        }]`
-				}
-			})
-		}
-
-		if (this.answers.type === 'empty' || this.answers.type === 'script') {
-			this.packageJson.merge({
-				scripts: {
-					start: `jolie ${this.module.name}`
-				}
-			})
-		}
-
-		if (this.jotAnswer.useJot) {
-			this.test_data = {
-				module_name: this.module.name,
-				service_name: this.answers.main_service
-			}
-
-			this.packageJson.merge({
-				scripts: {
-					test: 'jot jot.json'
-				}
-			})
-			const jotVersion = await latestVersion('@jolie/jot')
-			await this.addDevDependencies({ '@jolie/jot': `^${jotVersion}` })
-		}
-
-		if (this.watchAnswer.watch) {
-			this.packageJson.merge({
-				scripts: {
-					watch: `nodemon jolie ${this.module.name}`
-				}
-			})
-			const nodemonVersion = await latestVersion('nodemon')
-			await this.addDevDependencies({ nodemon: `^${nodemonVersion}` })
-		}
+		this.composeWith(require.resolve(`./${this.service.language}`), { service_name: this.service.name, module: this.module, packageJSONAnswers: this.packageJSONAnswers })
+		this.composeWith(require.resolve('./dev'), { service: this.service, module: this.module })
 	}
 
 	async writing () {
-		if (this.jotAnswer.useJot) {
-			this.renderTemplate('test', '.', this.test_data)
-		}
+		const jolieFile = typeof (this.config.get('jolie_file')) !== 'undefined'
+			? this.config.get('jolie_file')
+			: { services: [{ name: this.service.name }] }
 
 		this.renderTemplate(
 			'service/service.ol',
-			this.module.name,
-			this.config.get('service_data')
+			this.module,
+			{ file: jolieFile }
 		)
 	}
 }

@@ -1,0 +1,69 @@
+service <%= service.name %> {
+<%_ if ( typeof( service.execution ) !== 'undefined' ) { _%>
+    execution: <%= service.execution %>
+<%_ } _%>
+<%_ service.embeds?.forEach( embed => { _%>
+    embed <%= embed %> as <%= embed %>
+<%_ } ) _%>
+<%_ service.input_ports?.forEach( ip => { _%>
+    inputPort <%= ip.name %> {
+        location: "<%- ip.location %>"
+    <%_ if ( typeof( ip.protocol ) !== 'undefined' ) { _%>
+        protocol: <%- ip.protocol %>
+    <%_ } _%>
+    <%_ if ( typeof( ip.interfaces ) !== 'undefined' ) { _%>
+        interfaces: <%= ip.interfaces.join( ", " ) %>
+    <%_ } _%>
+    <%_ if ( typeof( ip.aggregates ) !== 'undefined' ) { _%>
+        aggregates: <%= ip.aggregates.join( ", " ) %>
+    <%_ } _%>
+    }
+<%_ } ) _%>
+<%_ service.output_ports?.forEach( op => { _%>
+    outputPort <%= op.name %> {
+        location: "<%- op.location %>"
+    <%_ if ( typeof( op.protocol ) !== 'undefined' ) { _%>
+        protocol: <%- op.protocol %>
+    <%_ } _%>
+        interfaces: <%= ip.interfaces.join( ", " ) %>
+    }
+<%_ } ) _%>
+<%_ if ( typeof( service.foreign ) !== 'undefined' ) { _%>
+	foreign <%= service.foreign.type %> {
+		class: "<%= service.foreign.class %>"
+	}
+<%_ } else { _%>
+	main {
+    <%_ if ( typeof( service.code ) !== 'undefined' ) { _%>
+        <%- service.code %>
+    <%_ } else { _%>
+		// Your code here
+    <%_ } _%>
+	}
+<%_ } _%>
+}
+<%#
+{
+    name: "service name",
+    execution?: "",
+    embeds?: ["service to embed"],
+    input_ports?: [{
+        name: "",
+        location: "",
+        protocol?: "",
+        interfaces?: ["interface"],
+        aggregates?: ["service"]
+    }],
+    output_ports?: [{
+        name: "",
+        location: "",
+        protocol?: "",
+        interfaces: ["interface"]
+    }],
+    foreign?: {
+        type: ""
+        class: ""
+    },
+    code?: ""
+}
+#%>

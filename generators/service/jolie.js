@@ -17,7 +17,7 @@ module.exports = class extends Generator {
 		if (this.answers.watch) {
 			this.packageJson.merge({
 				scripts: {
-					watch: `nodemon jolie ${this.module}`
+					watch: `nodemon --exec jolie ${this.module}`
 				}
 			})
 			const nodemonVersion = await latestVersion('nodemon')

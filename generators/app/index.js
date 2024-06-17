@@ -46,6 +46,7 @@ module.exports = class extends Generator {
 			}
 		])
 		this.composeWith(require.resolve(`../${this.project.template}`), { module: this.project.module, packageJSONAnswers: this.packageJSONAnswers })
+		this.composeWith(require.resolve('./docker'), { module: this.project.module })
 	}
 
 	async configuring () {
@@ -54,10 +55,6 @@ module.exports = class extends Generator {
 			...this.packageJSONAnswers
 		})
 		this.packageJson.merge({ scripts: { postinstall: 'npx @jolie/jpm install' } })
-	}
-
-	async devEnv () {
-		this.composeWith(require.resolve('./dev'), { module: this.project.module })
 	}
 
 	async writing () {

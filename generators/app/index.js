@@ -58,7 +58,7 @@ module.exports = class extends Generator {
 	}
 	
 	// ensures docker is composed last
-	async docker {
+	async docker () {
 		this.composeWith(require.resolve('./docker'), { module: this.project.module })
 	}
 

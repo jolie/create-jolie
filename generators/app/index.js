@@ -55,7 +55,10 @@ module.exports = class extends Generator {
 			...this.packageJSONAnswers
 		})
 		this.packageJson.merge({ scripts: { postinstall: 'npx @jolie/jpm install' } })
-		// ensures docker is composed last
+	}
+	
+	// ensures docker is composed last
+	async docker {
 		this.composeWith(require.resolve('./docker'), { module: this.project.module })
 	}
 

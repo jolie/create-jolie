@@ -9,16 +9,33 @@ module.exports = class extends Generator {
 	}
 
 	async prompting () {
-		const checkVersion = version => {
-			const v = Number(version)
-			if (isNaN(v)) { return 'The Java version must be a number' }
-			if (v < 21) { return 'The Java version must at least be 21' }
-			return true
-		}
 		this.answers = await this.prompt([
-			{ type: 'input', name: 'groupId', message: 'groupId', default: `joliex.${this.packageJSONAnswers.name.toLowerCase()}` },
-			{ type: 'input', name: 'artifactId', message: 'artifactId', default: this.service_name.toLowerCase() },
-			{ type: 'input', name: 'javaVersion', message: 'Java version', default: '21', validate: checkVersion },
+			{
+				type: 'input',
+				name: 'groupId',
+				message: 'groupId',
+				default: 'org.jolie-lang.joliex',
+				validate: id => id.match(/^[a-z0-9-]+(?:\.[a-z0-9-]+)*$/) ? true : 'The groupId is invalid, please specify a dot-delimited id comprised only of lowercase english letters, digits, and hyphens'
+			},
+			{
+				type: 'input',
+				name: 'artifactId',
+				message: 'artifactId',
+				default: this.packageJSONAnswers.name.replaceAll(/[^a-z0-9-]/g, ''),
+				validate: id => id.match(/^[a-z0-9-]+$/) ? true : 'The artifactId is invalid, please specify an id comprised only of lowercase english letters, digits, and hyphens'
+			},
+			{
+				type: 'input',
+				name: 'javaVersion',
+				message: 'Java version',
+				default: '21',
+				validate: version => {
+					const v = Number(version)
+					if (isNaN(v)) { return 'The Java version must be a number' }
+					if (v < 21) { return 'The Java version must at least be 21' }
+					return true
+				}
+			},
 			{ type: 'confirm', name: 'standalone', message: 'Do you want a launcher service (standalone service)?', default: false }
 		])
 	}
@@ -49,7 +66,7 @@ module.exports = class extends Generator {
 			})
 		}
 
-		const packageName = this.answers.groupId
+		const packageName = (this.answers.groupId + '.' + this.answers.artifactId).replaceAll('-', '_')
 		const interfaceName = `${this.service_name}Interface`
 
 		interfaces.push({

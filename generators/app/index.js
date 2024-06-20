@@ -16,7 +16,8 @@ module.exports = class extends Generator {
 				type: 'input',
 				name: 'name',
 				message: 'Package name',
-				default: path.basename(process.cwd())
+				default: path.basename(process.cwd()).toLowerCase(),
+				validate: name => name.match(/^(?:(?:@(?:[a-z0-9-*~][a-z0-9-*._~]*)?\/[a-z0-9-._~])|[a-z0-9-~])[a-z0-9-._~]*$/) ? true : 'The package name was invalid, please specify a valid package name or scoped package name'
 			},
 			{
 				type: 'input',
@@ -46,7 +47,6 @@ module.exports = class extends Generator {
 			}
 		])
 		this.composeWith(require.resolve(`../${this.project.template}`), { module: this.project.module, packageJSONAnswers: this.packageJSONAnswers })
-		this.composeWith(require.resolve('./docker'), { module: this.project.module })
 	}
 
 	async configuring () {
@@ -55,6 +55,11 @@ module.exports = class extends Generator {
 			...this.packageJSONAnswers
 		})
 		this.packageJson.merge({ scripts: { postinstall: 'npx @jolie/jpm install' } })
+	}
+	
+	// ensures docker is composed last
+	async docker () {
+		this.composeWith(require.resolve('./docker'), { module: this.project.module })
 	}
 
 	async writing () {

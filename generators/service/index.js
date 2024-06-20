@@ -8,9 +8,14 @@ module.exports = class extends Generator {
 	}
 
 	async prompting () {
-		const pascalCaseName = this.packageJSONAnswers.name.replace(/\w+/g, function (w) { return w[0].toUpperCase() + w.slice(1).toLowerCase() })
 		this.service = await this.prompt([
-			{ type: 'input', name: 'name', message: 'Service name', default: pascalCaseName },
+			{
+				type: 'input',
+				name: 'name',
+				message: 'Service name',
+				default: this.packageJSONAnswers.name.match(/[\p{L}\p{N}]+/gu)?.map(n => n[0].toUpperCase() + n.slice(1)).join(''),
+				validate: name => name.match(/^[\p{Lu}_][\p{L}\p{N}_]*$/u) ? true : 'The service name is invalid, please specify a name, starting with an uppercase letter or underscore, consisting only of letters, digits, and underscores.'
+			},
 			{
 				type: 'list',
 				name: 'language',

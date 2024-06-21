@@ -25,7 +25,7 @@
         <dependency>
             <groupId>org.jolie-lang</groupId>
             <artifactId>jolie</artifactId>
-            <version>1.11.0</version>
+            <version><%= jolieVersion _%></version>
         </dependency>
     </dependencies>
 

@@ -1,4 +1,53 @@
 const Generator = require('yeoman-generator')
+const semver = require('semver')
+const { which, exec } = require('shelljs')
+const chalk = require('chalk')
+
+/**
+ * Returns true if jolie execuable is present in the PATH
+ *
+ * @return {Boolean}
+ */
+function isJolieExists () {
+	return !!which('jolie')
+}
+
+const jolieVersionRegex = /^Jolie (\d+.\d+..*?)[\s]/
+
+/**
+   * Search latest version of an project on maven repository
+   *
+   * @return {Promise<string>} the latest version on maven repository
+   *
+   * @throws Error unable to connect to MVN repository
+   *
+   */
+async function getMavenLatestProjectVersion (groupID, artifactID) {
+	const endpoint = `http://search.maven.org/solrsearch/select?q=g:%22${groupID}%22+AND+a:%22${artifactID}%22`
+
+	const response = await fetch(endpoint)
+
+	if (!response.ok) throw Error('Unable to fetch jolie latest version from maven repository')
+
+	 const {
+		response: { docs }
+	} = await response.json()
+	return docs[0].latestVersion
+}
+
+/**
+ * Get Jolie version from local machine or from the released
+ *
+ * @param {Promise<Boolean>} local flag for determine the location to get jolie version
+ * @return {*}
+ */
+async function getJolieVersion (local) {
+	if (local) {
+		return exec('jolie --version', { silent: true }).stderr.match(jolieVersionRegex)[1]
+	} else {
+		return await getMavenLatestProjectVersion('org.jolie-lang', 'libjolie')
+	}
+}
 
 module.exports = class extends Generator {
 	constructor (args, opts) {
@@ -41,6 +90,10 @@ module.exports = class extends Generator {
 	}
 
 	async configuring () {
+		this.hasLocalJolie = isJolieExists()
+
+		this.jolieVersion = await getJolieVersion(this.hasLocalJolie)
+
 		const interfaces = []
 		const services = []
 
@@ -109,6 +162,15 @@ module.exports = class extends Generator {
 	}
 
 	async writing () {
+		if (!this.hasLocalJolie) {
+			this.log(`Unable to locate local Jolie executable, please visit Jolie download page ${chalk.blue.underline('https://www.jolie-lang.org/downloads.html')}`)
+		}
+
+		if (semver.lt(this.jolieVersion, '1.13.0')) {
+			this.log(`The Jolie version found is older than ${chalk.blue('1.13.0')}. Please upgrade your Jolie version to at least ${chalk.blue('1.13.0')}.`)
+			this.jolieVersion = '1.13.0'
+		}
+
 		this.renderTemplate(
 			'java/pom.xml',
 			'pom.xml',
@@ -118,7 +180,8 @@ module.exports = class extends Generator {
 				version: this.packageJSONAnswers.version,
 				name: this.packageJSONAnswers.name,
 				url: this.packageJSONAnswers.repo,
-				javaVersion: this.answers.javaVersion
+				javaVersion: this.answers.javaVersion,
+				jolieVersion: this.jolieVersion
 			}
 		)
 	}

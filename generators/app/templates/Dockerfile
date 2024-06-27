@@ -1,8 +1,8 @@
-FROM jolielang/jolie:edge
+FROM jolielang/jolie:<%- version %>
 
 WORKDIR /app
 COPY . .
 <% if (typeof tcpPort !== 'undefined') { %>
-EXPOSE <%= tcpPort %>
+EXPOSE <%- tcpPort %>
 <% } %>
-CMD ["jolie", "<%= moduleName %>"]
+CMD ["npm", "start"]

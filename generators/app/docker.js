@@ -3,7 +3,7 @@ const Generator = require('yeoman-generator')
 module.exports = class extends Generator {
 	constructor (args, opts) {
 		super(args, opts)
-		this.module_name = opts.module.name
+		this.jolieVersion = opts.jolieVersion
 	}
 
 	async prompting () {
@@ -12,18 +12,32 @@ module.exports = class extends Generator {
 			{ type: 'confirm', name: 'dockerfile', message: 'Do you want a Dockerfile?', default: true }
 		])
 
-		if (this.answers.dockerfile) {
-			this.tcpPort = typeof (this.config.get('port')) !== 'undefined'
-				? this.config.get('port')
-				: await this.prompt({ type: 'input', name: 'tcpPort', message: 'Container listening port', default: '8080' })
+		if (this.answers.dockerfile && typeof (this.config.get('port')) === 'undefined') {
+			this.config.set(await this.prompt({
+				type: 'input',
+				name: 'port',
+				message: 'Container listening port',
+				default: '8080',
+				validate: port => {
+					const p = Number(port)
+					if (isNaN(p)) { return 'Container listening port must be an integer' }
+					if (p < 0 || p > 65535) { return 'Container listening port must be in the range: [0,65535]' }
+					return true
+				}
+			}))
 		}
 	}
 
 	async writing () {
 		if (this.answers.devcontainer) {
-			this.copyTemplate(
+			this.config.defaults({ extensions: [] })
+			this.renderTemplate(
 				'devcontainer',
-				'.devcontainer'
+				'.devcontainer',
+				{
+					version: this.jolieVersion,
+					extensions: ['jolie.vscode-jolie', ...this.config.get('extensions')]
+				}
 			)
 		}
 
@@ -32,8 +46,8 @@ module.exports = class extends Generator {
 				'Dockerfile',
 				'Dockerfile',
 				{
-					moduleName: this.module_name,
-					tcpPort: this.tcpPort
+					version: this.jolieVersion,
+					tcpPort: this.config.get('port')
 				}
 			)
 		}

@@ -4,9 +4,47 @@ const semver = require('semver')
 const os = require('os')
 const boxen = require('boxen')
 const dedent = require('dedent')
+const { which, exec } = require('shelljs')
+const chalk = require('chalk')
+
+/**
+   * Searches the maven repository for the latest version of the given project
+   *
+   * @return {Promise<string>} the latest version of the given project
+   *
+   * @throws Error unable to connect to the MVN repository
+   *
+   */
+async function getMavenLatestProjectVersion (groupID, artifactID) {
+	const endpoint = `http://search.maven.org/solrsearch/select?q=g:%22${groupID}%22+AND+a:%22${artifactID}%22`
+
+	const response = await fetch(endpoint)
+
+	if (!response.ok) throw Error('Unable to fetch the latest version of jolie from the maven repository')
+
+	const {
+		response: { docs }
+	} = await response.json()
+	return semver.parse(docs[0].latestVersion)
+}
 
 module.exports = class extends Generator {
 	async initializing () {
+		if (!which('jolie')) {
+			const answer = await this.prompt({
+				type: 'confirm',
+				name: 'continue',
+				message: 'Unable to locate local Jolie installation, continue anyways?',
+				default: false,
+				store: true
+			})
+			if (!answer.continue) {
+				this.env.error(`Please download Jolie from: ${chalk.blue.underline('https://www.jolie-lang.org/downloads.html')}`)
+			}
+			this.jolieVersion = await getMavenLatestProjectVersion('org.jolie-lang', 'libjolie')
+		} else {
+			this.jolieVersion = semver.parse(exec('jolie --version', { silent: true }).stderr.match(/^Jolie (\d+.\d+..*?)[\s]/)[1])
+		}
 		this.log('Start creating a Jolie project.')
 	}
 
@@ -29,12 +67,19 @@ module.exports = class extends Generator {
 			{ type: 'input', name: 'description', message: 'Package description' },
 			{ type: 'input', name: 'repo', message: 'Git repository URL' },
 			{ type: 'input', name: 'keywords', message: 'Package keywords (comma-delimited)', default: '' },
-			{ type: 'input', name: 'author', message: 'Author', default: os.userInfo().username },
+			{ type: 'input', name: 'author', message: 'Author', default: os.userInfo().username, store: true },
 			{ type: 'input', name: 'license', message: 'License', default: 'ISC' }
 		])
 
 		this.project = await this.prompt([
-			{ type: 'input', name: 'module', message: 'Module file name', default: 'main.ol' },
+			{
+				type: 'input',
+				name: 'module',
+				message: 'Module file name',
+				default: 'main.ol',
+				validate: m => m.match(/^[\p{L}\p{N}_-]+(?:\.ol)?$/u) ? true : 'The file name is invalid, please specify a valid file name with no weird symbols',
+				filter: m => m.endsWith('.ol') ? m : `${m}.ol`
+			},
 			{
 				type: 'list',
 				name: 'template',
@@ -46,7 +91,7 @@ module.exports = class extends Generator {
 				]
 			}
 		])
-		this.composeWith(require.resolve(`../${this.project.template}`), { module: this.project.module, packageJSONAnswers: this.packageJSONAnswers })
+		this.composeWith(require.resolve(`../${this.project.template}`), { module: this.project.module, packageJSONAnswers: this.packageJSONAnswers, jolieVersion: this.jolieVersion })
 	}
 
 	async configuring () {
@@ -54,12 +99,14 @@ module.exports = class extends Generator {
 		this.packageJson.merge({
 			...this.packageJSONAnswers
 		})
-		this.packageJson.merge({ scripts: { postinstall: 'npx @jolie/jpm install' } })
+		this.packageJson.merge({ scripts: { postinstall: 'jpm install' } })
+
+		await this.addDevDependencies({ '@jolie/jpm': '2.1.3' })
 	}
-	
+
 	// ensures docker is composed last
 	async docker () {
-		this.composeWith(require.resolve('./docker'), { module: this.project.module })
+		this.composeWith(require.resolve('./docker'), { jolieVersion: this.jolieVersion })
 	}
 
 	async writing () {
@@ -75,6 +122,6 @@ module.exports = class extends Generator {
 	async end () {
 		this.debug('end')
 		this.fs.delete('.yo-rc.json')
-		this.log(boxen(dedent`🎇 Jolie project initialised 🎆`, { padding: 1 }))
+		this.log(boxen(dedent`🎇 Jolie project initialized 🎆`, { padding: 1 }))
 	}
 }

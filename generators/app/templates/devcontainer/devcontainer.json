@@ -1,9 +1,8 @@
 {
-	"image": "jolielang/jolie:edge-dev",
-	"containerUser": "jolie",
+	"image": "jolielang/jolie:<%- version %>-dev",
 	"customizations": {
 		"vscode": {
-			"extensions": ["jolie.vscode-jolie"]
+			"extensions": [<%- extensions.map(ext => `"${ext}"`).join(", ") %>]
 		}
 	}
 }

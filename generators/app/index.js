@@ -7,6 +7,8 @@ const dedent = require('dedent')
 const { which, exec } = require('shelljs')
 const chalk = require('chalk')
 
+const JOLIE_DOWNLOAD = 'https://www.jolie-lang.org/downloads.html'
+
 /**
    * Searches the maven repository for the latest version of the given project
    *
@@ -20,7 +22,7 @@ async function getMavenLatestProjectVersion (groupID, artifactID) {
 
 	const response = await fetch(endpoint)
 
-	if (!response.ok) throw Error('Unable to fetch the latest version of jolie from the maven repository')
+	if (!response.ok) throw Error(`Unable to fetch the latest version of jolie, consider downloading it from: ${chalk.blue.underline(JOLIE_DOWNLOAD)}`)
 
 	const {
 		response: { docs }
@@ -30,20 +32,12 @@ async function getMavenLatestProjectVersion (groupID, artifactID) {
 
 module.exports = class extends Generator {
 	async initializing () {
-		if (!which('jolie')) {
-			const answer = await this.prompt({
-				type: 'confirm',
-				name: 'continue',
-				message: 'Unable to locate local Jolie installation, continue anyways?',
-				default: false,
-				store: true
-			})
-			if (!answer.continue) {
-				this.env.error(`Please download Jolie from: ${chalk.blue.underline('https://www.jolie-lang.org/downloads.html')}`)
-			}
-			this.jolieVersion = await getMavenLatestProjectVersion('org.jolie-lang', 'libjolie')
-		} else {
+		if (which('jolie')) {
 			this.jolieVersion = semver.parse(exec('jolie --version', { silent: true }).stderr.match(/^Jolie (\d+.\d+..*?)[\s]/)[1])
+		} else {
+			this.log('Unable to locate local Jolie installation, fetching the latest version...')
+			this.jolieVersion = await getMavenLatestProjectVersion('org.jolie-lang', 'libjolie')
+			this.log(`Found version ${this.jolieVersion}, consider downloading it from: ${chalk.blue.underline(JOLIE_DOWNLOAD)}`)
 		}
 		this.log('Start creating a Jolie project.')
 	}

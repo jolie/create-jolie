@@ -6,6 +6,7 @@ const boxen = require('boxen')
 const dedent = require('dedent')
 const { which, exec } = require('shelljs')
 const chalk = require('chalk')
+const latestVersion = require('latest-version')
 
 const JOLIE_DOWNLOAD = 'https://www.jolie-lang.org/downloads.html'
 
@@ -95,7 +96,8 @@ module.exports = class extends Generator {
 		})
 		this.packageJson.merge({ scripts: { postinstall: 'jpm install' } })
 
-		await this.addDevDependencies({ '@jolie/jpm': '2.1.3' })
+		const jpmVersion = await latestVersion('@jolie/jpm')
+		await this.addDevDependencies({ '@jolie/jpm': `^${jpmVersion}` })
 	}
 
 	// ensures docker is composed last

@@ -1,6 +1,6 @@
 interface <%- interface.name %> {
 <%_ interface.rrs?.forEach( rr => { _%>
-    RequestResponse: <%- rr.name %>(<%- rr.requestType %>)(<%- rr.responseType %>)    
+    RequestResponse: <%- rr.name %>(<%- rr.requestType %>)(<%- rr.responseType %>)
 <%_ } ) _%>
 <%_ interface.ows?.forEach( ow => { _%>
     OneWay: <%- ow.name %>(<%- ow.requestType %>)

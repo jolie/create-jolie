@@ -22,6 +22,11 @@ module.exports = class extends Generator {
 			})
 			await this.addDevDependencies({ 'webpack-cli': '^4', webpack: '^5' })
 		}
+		this.packageJson.merge({
+			scripts: {
+				start: `jolie ${this.module}`
+			}
+		})
 	}
 
 	async writing () {
@@ -45,7 +50,7 @@ module.exports = class extends Generator {
 		}
 	}
 
-	install () {
-		this.spawnCommandSync('npx', ['@jolie/jpm', 'install', '@jolie/leonardo'])
+	async install () {
+		this.spawnCommandSync('jpm', ['install', '@jolie/leonardo'])
 	}
 }

@@ -1,53 +1,5 @@
 const Generator = require('yeoman-generator')
 const semver = require('semver')
-const { which, exec } = require('shelljs')
-const chalk = require('chalk')
-
-/**
- * Returns true if jolie execuable is present in the PATH
- *
- * @return {Boolean}
- */
-function isJolieExists () {
-	return !!which('jolie')
-}
-
-const jolieVersionRegex = /^Jolie (\d+.\d+..*?)[\s]/
-
-/**
-   * Search latest version of an project on maven repository
-   *
-   * @return {Promise<string>} the latest version on maven repository
-   *
-   * @throws Error unable to connect to MVN repository
-   *
-   */
-async function getMavenLatestProjectVersion (groupID, artifactID) {
-	const endpoint = `http://search.maven.org/solrsearch/select?q=g:%22${groupID}%22+AND+a:%22${artifactID}%22`
-
-	const response = await fetch(endpoint)
-
-	if (!response.ok) throw Error('Unable to fetch jolie latest version from maven repository')
-
-	 const {
-		response: { docs }
-	} = await response.json()
-	return docs[0].latestVersion
-}
-
-/**
- * Get Jolie version from local machine or from the released
- *
- * @param {Promise<Boolean>} local flag for determine the location to get jolie version
- * @return {*}
- */
-async function getJolieVersion (local) {
-	if (local) {
-		return exec('jolie --version', { silent: true }).stderr.match(jolieVersionRegex)[1]
-	} else {
-		return await getMavenLatestProjectVersion('org.jolie-lang', 'libjolie')
-	}
-}
 
 module.exports = class extends Generator {
 	constructor (args, opts) {
@@ -55,6 +7,13 @@ module.exports = class extends Generator {
 		this.service_name = opts.service_name
 		this.module = opts.module
 		this.packageJSONAnswers = opts.packageJSONAnswers
+		this.jolieVersion = opts.jolieVersion
+	}
+
+	async initializing () {
+		if (semver.lt(this.jolieVersion, '1.13.0')) {
+			this.log.error(`Your version of Jolie (${this.jolieVersion}) is not compatible with making a Java service project, consider upgrading to the newest version of Jolie before continuing`)
+		}
 	}
 
 	async prompting () {
@@ -64,6 +23,7 @@ module.exports = class extends Generator {
 				name: 'groupId',
 				message: 'groupId',
 				default: 'org.jolie-lang.joliex',
+				store: true,
 				validate: id => id.match(/^[a-z0-9-]+(?:\.[a-z0-9-]+)*$/) ? true : 'The groupId is invalid, please specify a dot-delimited id comprised only of lowercase english letters, digits, and hyphens'
 			},
 			{
@@ -78,6 +38,7 @@ module.exports = class extends Generator {
 				name: 'javaVersion',
 				message: 'Java version',
 				default: '21',
+				store: true,
 				validate: version => {
 					const v = Number(version)
 					if (isNaN(v)) { return 'The Java version must be a number' }
@@ -90,11 +51,6 @@ module.exports = class extends Generator {
 	}
 
 	async configuring () {
-		this.hasLocalJolie = isJolieExists()
-
-		this.jolieVersion = await getJolieVersion(this.hasLocalJolie)
-
-		const interfaces = []
 		const services = []
 
 		if (this.answers.standalone) {
@@ -122,15 +78,6 @@ module.exports = class extends Generator {
 		const packageName = (this.answers.groupId + '.' + this.answers.artifactId).replaceAll('-', '_')
 		const interfaceName = `${this.service_name}Interface`
 
-		interfaces.push({
-			name: interfaceName,
-			rrs: [{
-				name: 'hello',
-				requestType: 'void',
-				responseType: 'string'
-			}]
-		})
-
 		services.push({
 			name: this.service_name,
 			input_ports: [{
@@ -144,17 +91,24 @@ module.exports = class extends Generator {
 			}
 		})
 
-		this.config.merge({
-			jolie_file: {
-				interfaces,
-				services
-			}
+		this.config.set('file', {
+			interfaces: [{
+				name: interfaceName,
+				rrs: [{
+					name: 'hello',
+					requestType: 'void',
+					responseType: 'string'
+				}]
+			}],
+			services
 		})
+
+		this.config.set('extensions', ['vscjava.vscode-java-pack'])
 
 		this.packageJson.merge({
 			scripts: {
 				'clean-generate': 'rimraf -g "./src/main/java/*" && npm run generate',
-				generate: `jolie2java --outputDirectory "./src/main/java" --packageName "${packageName}" --typePackage "${packageName}.spec.types" --faultPackage "${packageName}.spec.faults" --interfacePackage "${packageName}.spec.interfaces" --serviceName "${this.service_name}" --generateService 0 ${this.module}`
+				generate: `jolie2java --translationTarget 0 --overwriteServices false --outputDirectory "./src/main/java" --sourcesPackage ".spec" ${this.module}`
 			}
 		})
 
@@ -162,15 +116,6 @@ module.exports = class extends Generator {
 	}
 
 	async writing () {
-		if (!this.hasLocalJolie) {
-			this.log(`Unable to locate local Jolie executable, please visit Jolie download page ${chalk.blue.underline('https://www.jolie-lang.org/downloads.html')}`)
-		}
-
-		if (semver.lt(this.jolieVersion, '1.13.0')) {
-			this.log(`The Jolie version found is older than ${chalk.blue('1.13.0')}. Please upgrade your Jolie version to at least ${chalk.blue('1.13.0')}.`)
-			this.jolieVersion = '1.13.0'
-		}
-
 		this.renderTemplate(
 			'java/pom.xml',
 			'pom.xml',

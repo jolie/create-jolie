@@ -24,29 +24,27 @@ module.exports = class extends Generator {
 
 			if (this.service.language === 'jolie') {
 				const interfaceName = `${this.service.name}Interface`
-				this.config.merge({
-					jolie_file: {
-						interfaces: [{
-							name: interfaceName,
-							rrs: [{
-								name: 'hello',
-								requestType: 'void',
-								responseType: 'string'
-							}],
-							ows: []
+				this.config.set('file', {
+					interfaces: [{
+						name: interfaceName,
+						rrs: [{
+							name: 'hello',
+							requestType: 'void',
+							responseType: 'string'
 						}],
-						services: [{
-							name: this.service.name,
-							execution: 'concurrent',
-							input_ports: [{
-								name: 'ip',
-								location: 'local',
-								protocol: 'sodep',
-								interfaces: [interfaceName]
-							}],
-							code: '[hello()(res) { res = "World" }]'
-						}]
-					}
+						ows: []
+					}],
+					services: [{
+						name: this.service.name,
+						execution: 'concurrent',
+						input_ports: [{
+							name: 'ip',
+							location: 'local',
+							protocol: 'sodep',
+							interfaces: [interfaceName]
+						}],
+						code: '[hello()(res) { res = "World" }]'
+					}]
 				})
 			}
 

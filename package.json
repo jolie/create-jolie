@@ -3,6 +3,7 @@
   "version": "1.8.2",
   "description": "Set up a Jolie project in the easy way",
   "main": "main.js",
+  "type": "module",
   "bin": {
     "create-jolie": "main.js"
   },
@@ -31,20 +32,19 @@
   ],
   "homepage": "https://github.com/jolie/create-jolie#readme",
   "dependencies": {
-    "boxen": "^5.1.2",
-    "chalk": "^4.1.2",
+    "boxen": "^8.0.1",
+    "chalk": "^5.3.0",
     "dedent": "^1.5.3",
-    "latest-version": "^5.1.0",
-    "semver": "^7.3.7",
+    "latest-version": "^9.0.0",
+    "semver": "^7.6.3",
     "shelljs": "^0.8.5",
-    "yeoman-environment": "^3.10.0",
-    "yeoman-generator": "^5.10.0"
+    "yeoman-environment": "^4.4.3",
+    "yeoman-generator": "^7.4.0"
   },
   "devDependencies": {
-    "eslint": "^8.21.0",
-    "eslint-config-standard": "^17.0.0",
-    "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-n": "^15.2.4",
-    "eslint-plugin-promise": "^6.0.0"
-  }
+    "@eslint/js": "^9.19.0",
+    "eslint": "^8.57.1",
+    "globals": "^15.14.0"
+  },
+  "packageManager": "npm@7.24.0"
 }

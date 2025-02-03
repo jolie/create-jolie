@@ -1,7 +1,7 @@
-const Generator = require('yeoman-generator')
-const latestVersion = require('latest-version')
+import Generator from 'yeoman-generator'
+import latestVersion from 'latest-version'
 
-module.exports = class extends Generator {
+export default class extends Generator {
 	constructor (args, opts) {
 		super(args, opts)
 		this.service_name = opts.service_name

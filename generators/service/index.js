@@ -1,6 +1,7 @@
-const Generator = require('yeoman-generator')
-
-module.exports = class extends Generator {
+import Generator from 'yeoman-generator'
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+export default class extends Generator {
 	constructor (args, opts) {
 		super(args, opts)
 		this.module = opts.module
@@ -36,6 +37,7 @@ module.exports = class extends Generator {
 		this.config.defaults({
 			file: { services: [{ name: this.service.name }] }
 		})
+		this.config.set('java', this.service.language === 'java')
 		this.renderTemplate(
 			'service/service.ol',
 			this.module,

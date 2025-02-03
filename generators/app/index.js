@@ -1,12 +1,15 @@
-const Generator = require('yeoman-generator')
-const path = require('path')
-const semver = require('semver')
-const os = require('os')
-const boxen = require('boxen')
-const dedent = require('dedent')
-const { which, exec } = require('shelljs')
-const chalk = require('chalk')
-const latestVersion = require('latest-version')
+import Generator from 'yeoman-generator'
+import path from 'path'
+import semver from 'semver'
+import os from 'os'
+import boxen from 'boxen'
+import dedent from 'dedent'
+import shelljs from 'shelljs'
+import chalk from 'chalk'
+import latestVersion from 'latest-version'
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const { which, exec } = shelljs
 
 const JOLIE_DOWNLOAD = 'https://www.jolie-lang.org/downloads.html'
 
@@ -31,10 +34,10 @@ async function getMavenLatestProjectVersion (groupID, artifactID) {
 	return semver.parse(docs[0].latestVersion)
 }
 
-module.exports = class extends Generator {
+export default class extends Generator {
 	async initializing () {
 		if (which('jolie')) {
-			this.jolieVersion = semver.parse(exec('jolie --version', { silent: true }).stderr.match(/^Jolie (\d+.\d+..*?)[\s]/)[1])
+			this.jolieVersion = semver.coerce(exec('jolie --version', { silent: true }).stderr.match(/^Jolie (\d+.\d+..*?)[\s]/)[1])
 		} else {
 			this.log('Unable to locate local Jolie installation, fetching the latest version...')
 			this.jolieVersion = await getMavenLatestProjectVersion('org.jolie-lang', 'libjolie')
@@ -86,7 +89,7 @@ module.exports = class extends Generator {
 				]
 			}
 		])
-		this.composeWith(require.resolve(`../${this.project.template}`), { module: this.project.module, packageJSONAnswers: this.packageJSONAnswers, jolieVersion: this.jolieVersion })
+		await this.composeWith(require.resolve(`../${this.project.template}`), { module: this.project.module, packageJSONAnswers: this.packageJSONAnswers, jolieVersion: this.jolieVersion })
 	}
 
 	async configuring () {
@@ -102,17 +105,18 @@ module.exports = class extends Generator {
 
 	// ensures docker is composed last
 	async docker () {
-		this.composeWith(require.resolve('./docker'), { jolieVersion: this.jolieVersion })
+		await this.composeWith(require.resolve('./docker'), { jolieVersion: this.jolieVersion })
 	}
 
 	async writing () {
 		this.debug('writing')
+		this.renderTemplate('gitignore', '.gitignore', { java: this.config.get('java') === true })
 	}
 
 	async install () {
 		this.debug('install')
-		this.spawnCommandSync('npx', ['@jolie/jpm', 'init'])
-		this.spawnCommandSync('npm', ['install'])
+		this.spawnSync('npx', ['@jolie/jpm', 'init'])
+		this.spawnSync('npm', ['install'])
 	}
 
 	async end () {

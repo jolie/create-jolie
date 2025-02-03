@@ -1,7 +1,7 @@
-const Generator = require('yeoman-generator')
-const semver = require('semver')
+import Generator from 'yeoman-generator'
+import semver from "semver"
 
-module.exports = class extends Generator {
+export default class extends Generator {
 	constructor (args, opts) {
 		super(args, opts)
 		this.service_name = opts.service_name
@@ -132,6 +132,6 @@ module.exports = class extends Generator {
 	}
 
 	async install () {
-		this.spawnCommandSync('npm', ['run', 'generate'])
+		this.spawnSync('npm', ['run', 'generate'])
 	}
 }

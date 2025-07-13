@@ -125,7 +125,7 @@ Distributed under the MIT License. See `LICENSE` for more information.
 <!-- CONTACT -->
 ## Contact
 
-* E-mail, by sending an e-mail to `jolie-devel@googlegroups.com`. Anybody can send to the group. You can also register to the e-mail group at this link: <https://groups.google.com/g/jolie-devel>.
+* Our GitHub repository, in the forms of discussion threads, issues, and pull requests.
 * Chat or Audio/Video calls. See below for a link to our Discord server.
 
 ### Discord

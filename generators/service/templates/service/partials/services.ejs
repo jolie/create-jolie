@@ -33,13 +33,13 @@ service <%- service.name %> {
 		class: "<%- service.foreign.class %>"
 	}
 <%_ } else { _%>
-	main {
+    main {
     <%_ if ( typeof( service.code ) !== 'undefined' ) { _%>
         <%- service.code %>
     <%_ } else { _%>
-		// Your code here
+        // Your code here
     <%_ } _%>
-	}
+    }
 <%_ } _%>
 }
 <%#

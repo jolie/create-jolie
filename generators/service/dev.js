@@ -43,7 +43,7 @@ export default class extends Generator {
 							protocol: 'sodep',
 							interfaces: [interfaceName]
 						}],
-						code: '[hello()(res) { res = "World" }]'
+						code: '[ hello()(res) { res = "World" } ]'
 					}]
 				})
 			}

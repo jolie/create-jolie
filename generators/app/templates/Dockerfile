@@ -5,4 +5,4 @@ COPY . .
 <% if (typeof tcpPort !== 'undefined') { %>
 EXPOSE <%- tcpPort %>
 <% } %>
-CMD ["npm", "start"]
+CMD ["jolie", "main.ol"]

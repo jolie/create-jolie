@@ -19,7 +19,7 @@ export default class extends Generator {
 				validate: name => name.match(/^[\p{Lu}_][\p{L}\p{N}_]*$/u) ? true : 'The service name is invalid, please specify a name, starting with an uppercase letter or underscore, consisting only of letters, digits, and underscores.'
 			},
 			{
-				type: 'list',
+				type: 'select',
 				name: 'language',
 				message: 'Implementation language',
 				choices: [

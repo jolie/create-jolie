@@ -1,3 +1,4 @@
+import latestVersion from 'latest-version'
 import Generator from 'yeoman-generator'
 import path from 'path'
 import semver from 'semver'
@@ -6,7 +7,6 @@ import boxen from 'boxen'
 import dedent from 'dedent'
 import shelljs from 'shelljs'
 import chalk from 'chalk'
-import latestVersion from 'latest-version'
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 const { which, exec } = shelljs
@@ -79,7 +79,7 @@ export default class extends Generator {
 				filter: m => m.endsWith('.ol') ? m : `${m}.ol`
 			},
 			{
-				type: 'list',
+				type: 'select',
 				name: 'template',
 				message: 'Project template',
 				choices: [
@@ -99,8 +99,8 @@ export default class extends Generator {
 		})
 		this.packageJson.merge({ scripts: { postinstall: 'jpm install' } })
 
-		const jpmVersion = await latestVersion('@jolie/jpm')
-		await this.addDevDependencies({ '@jolie/jpm': `^${jpmVersion}` })
+		this.jpmVersion = await latestVersion('@jolie/jpm')
+		await this.addDevDependencies({ '@jolie/jpm': `^${this.jpmVersion}` })
 	}
 
 	// ensures docker is composed last
@@ -115,7 +115,7 @@ export default class extends Generator {
 
 	async install () {
 		this.debug('install')
-		this.spawnSync('npx', ['@jolie/jpm', 'init'])
+		this.spawnSync('npx', ['--yes', `@jolie/jpm@${this.jpmVersion}`, 'init'])
 		this.spawnSync('npm', ['install'])
 	}
 
